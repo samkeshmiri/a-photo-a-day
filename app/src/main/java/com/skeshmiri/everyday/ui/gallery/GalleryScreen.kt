@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skeshmiri.everyday.model.DailyPhoto
 import com.skeshmiri.everyday.ui.common.OnResume
-import com.skeshmiri.everyday.ui.common.ScreenHeader
 import com.skeshmiri.everyday.ui.common.UriImage
 
 @Composable
@@ -37,49 +36,43 @@ fun GalleryScreen(
 
     OnResume(viewModel::refresh)
 
-    Scaffold(
-        topBar = {
-            ScreenHeader(title = "Gallery")
-        },
-    ) { innerPadding ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
             }
+        }
 
-            uiState.photos.isEmpty() -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = uiState.errorMessage ?: "No saved photos yet.",
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                }
-            }
-
-            else -> {
-                GalleryGrid(
-                    photos = uiState.photos,
-                    onOpenPhoto = onOpenPhoto,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(horizontal = 12.dp),
+        uiState.photos.isEmpty() -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = uiState.errorMessage ?: "No saved photos yet.",
+                    style = MaterialTheme.typography.headlineSmall,
                 )
             }
+        }
+
+        else -> {
+            GalleryGrid(
+                photos = uiState.photos,
+                onOpenPhoto = onOpenPhoto,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp),
+            )
         }
     }
 }
