@@ -1,0 +1,37 @@
+app/src/main/java/com/skeshmiri/everyday/ui/gallery/GalleryScreen.kt
+  631ec8b0ee178b8f 4,8,12,18,20-21,24-25,41,53-57,265-342,344,346-394,396-401
+  51b56dab9694eae0 10-11,17,26-29,31-33,35,37,40,42-43,51,65,69-128,131-144,147-156,161-255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a1b46bcf83d501946c8921ba463e48620c68bf5e",
+  "prompts": {
+    "51b56dab9694eae0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d8851-922b-75b3-a193-b6d8fbba70c1",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 199,
+      "total_deletions": 36,
+      "accepted_lines": 199,
+      "overriden_lines": 0
+    },
+    "631ec8b0ee178b8f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019d315e-ffc3-79c2-b648-fd833abfd6b9",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 150,
+      "total_deletions": 31,
+      "accepted_lines": 148,
+      "overriden_lines": 0
+    }
+  }
+}
