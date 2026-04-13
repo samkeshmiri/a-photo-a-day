@@ -3,7 +3,9 @@ package com.skeshmiri.everyday.ui.camera
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.skeshmiri.everyday.model.DailyPhoto
@@ -26,7 +28,6 @@ class CameraScreenContentTest {
                         isLoading = false,
                     ),
                     onRequestPermission = {},
-                    onOpenGallery = {},
                     onCapture = {},
                     preview = { Box {} },
                 )
@@ -34,11 +35,10 @@ class CameraScreenContentTest {
         }
 
         composeRule.onNodeWithText("Allow camera").assertIsDisplayed()
-        composeRule.onNodeWithText("Open gallery").assertIsDisplayed()
     }
 
     @Test
-    fun showsLockedStateWhenTodaysPhotoExists() {
+    fun showsLoadingStateWhenTodaysPhotoExists() {
         composeRule.setContent {
             EverydayTheme {
                 CameraScreenContent(
@@ -56,14 +56,14 @@ class CameraScreenContentTest {
                         ),
                     ),
                     onRequestPermission = {},
-                    onOpenGallery = {},
                     onCapture = {},
                     preview = { Box {} },
                 )
             }
         }
 
-        composeRule.onNodeWithText("Today's photo is already saved.").assertIsDisplayed()
-        composeRule.onNodeWithText("Come back tomorrow for the next one.").assertIsDisplayed()
+        composeRule.onNode(
+            hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate),
+        ).assertIsDisplayed()
     }
 }

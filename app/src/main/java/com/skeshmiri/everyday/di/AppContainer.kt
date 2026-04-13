@@ -7,6 +7,9 @@ import com.skeshmiri.everyday.data.DailyPhotoRepository
 import com.skeshmiri.everyday.data.MediaStoreDailyPhotoRepository
 import com.skeshmiri.everyday.domain.DailyCapturePolicy
 import com.skeshmiri.everyday.domain.DefaultDailyCapturePolicy
+import com.skeshmiri.everyday.export.GalleryVideoExporter
+import com.skeshmiri.everyday.export.MediaStoreGalleryVideoExporter
+import com.skeshmiri.everyday.notifications.DailyReminderScheduler
 import com.skeshmiri.everyday.storage.TempPhotoStore
 import java.time.Clock
 
@@ -16,7 +19,9 @@ class AppContainer(context: Context) {
     val clock: Clock = Clock.systemDefaultZone()
     val tempPhotoStore = TempPhotoStore(appContext, clock)
     val dailyPhotoRepository: DailyPhotoRepository = MediaStoreDailyPhotoRepository(appContext, clock)
+    val galleryVideoExporter: GalleryVideoExporter = MediaStoreGalleryVideoExporter(appContext, clock)
     val dailyCapturePolicy: DailyCapturePolicy = DefaultDailyCapturePolicy()
+    val dailyReminderScheduler = DailyReminderScheduler(appContext, clock)
 
     fun createCameraController(): CameraController =
         CameraXCameraController(
@@ -24,4 +29,3 @@ class AppContainer(context: Context) {
             tempPhotoStore = tempPhotoStore,
         )
 }
-

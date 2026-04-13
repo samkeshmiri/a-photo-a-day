@@ -37,7 +37,10 @@ fun EverydayApp(
     }
     val galleryFactory = remember(container) {
         SimpleViewModelFactory {
-            GalleryViewModel(repository = container.dailyPhotoRepository)
+            GalleryViewModel(
+                repository = container.dailyPhotoRepository,
+                videoExporter = container.galleryVideoExporter,
+            )
         }
     }
 

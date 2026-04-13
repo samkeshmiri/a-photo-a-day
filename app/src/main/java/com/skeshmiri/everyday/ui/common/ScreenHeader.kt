@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,7 +19,12 @@ fun ScreenHeader(
     title: String,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Surface(shadowElevation = 2.dp) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding(),
+        shadowElevation = 2.dp,
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()

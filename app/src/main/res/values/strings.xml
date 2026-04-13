@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Everyday</string>
+    <string name="notification_channel_name">Daily reminder</string>
+    <string name="notification_channel_description">Reminds you to take today\'s photo.</string>
+    <string name="notification_title">Time for today\'s photo</string>
+    <string name="notification_body">Open Everyday and take your image.</string>
 </resources>
-
