@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MovieCreation
@@ -30,8 +31,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skeshmiri.everyday.model.DailyPhoto
 import com.skeshmiri.everyday.ui.common.OnResume
-import com.skeshmiri.everyday.ui.common.ScreenHeader
 import com.skeshmiri.everyday.ui.common.UriImage
 import java.time.LocalDate
 import java.time.YearMonth
@@ -101,20 +101,18 @@ internal fun GalleryScreenContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = {
-            ScreenHeader(
-                title = "",
-                actions = {
-                    if (uiState.photos.isNotEmpty()) {
-                        IconButton(onClick = onOpenExportDialog) {
-                            Icon(
-                                imageVector = Icons.Rounded.MovieCreation,
-                                contentDescription = "Export video",
-                            )
-                        }
-                    }
-                },
-            )
+        floatingActionButton = {
+            if (uiState.photos.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = onOpenExportDialog,
+                    shape = CircleShape,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.MovieCreation,
+                        contentDescription = "Export video",
+                    )
+                }
+            }
         },
     ) { innerPadding ->
         when {
