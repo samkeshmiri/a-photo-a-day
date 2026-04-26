@@ -309,11 +309,6 @@ private fun GalleryGrid(
                             contentScale = ContentScale.Crop,
                             thumbnailSize = 256.dp,
                         )
-                        Text(
-                            text = photo.dateKey,
-                            modifier = Modifier.padding(top = 8.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
                     }
                 }
             }
