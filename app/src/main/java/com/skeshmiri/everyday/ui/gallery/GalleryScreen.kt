@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -268,16 +269,16 @@ private fun GalleryGrid(
     Box(modifier = modifier) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Adaptive(minSize = 140.dp),
+            columns = GridCells.Fixed(4),
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                start = 4.dp,
+                start = 2.dp,
                 top = 8.dp,
-                end = 16.dp,
+                end = 10.dp,
                 bottom = 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             monthSections.forEach { section ->
                 item(
@@ -305,7 +306,7 @@ private fun GalleryGrid(
                             contentDescription = photo.displayName,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(180.dp),
+                                .aspectRatio(1f),
                             contentScale = ContentScale.Crop,
                             thumbnailSize = 256.dp,
                         )
