@@ -5,8 +5,8 @@ import java.util.Locale
 import kotlin.math.round
 
 object GalleryVideoExportDefaults {
-    val fpsPresets: List<Int> = listOf(12, 24, 30)
-    const val defaultFps: Int = 24
+    val fpsPresets: List<Int> = listOf(3, 5, 8)
+    const val defaultFps: Int = 5
 
     fun estimatedDurationSeconds(photoCount: Int, fps: Int): Double {
         if (photoCount <= 0 || fps <= 0) {

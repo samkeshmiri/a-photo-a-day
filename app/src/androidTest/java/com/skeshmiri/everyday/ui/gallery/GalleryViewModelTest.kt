@@ -43,8 +43,8 @@ class GalleryViewModelTest {
         viewModel.refresh()
         advanceUntilIdle()
 
-        assertEquals(24, viewModel.uiState.value.selectedFps)
-        assertEquals(1.5, viewModel.uiState.value.estimatedDurationSeconds, 0.0)
+        assertEquals(5, viewModel.uiState.value.selectedFps)
+        assertEquals(7.2, viewModel.uiState.value.estimatedDurationSeconds, 0.0)
     }
 
     @Test
@@ -63,10 +63,10 @@ class GalleryViewModelTest {
 
         viewModel.refresh()
         advanceUntilIdle()
-        viewModel.selectFps(12)
+        viewModel.selectFps(3)
 
-        assertEquals(12, viewModel.uiState.value.selectedFps)
-        assertEquals(3.0, viewModel.uiState.value.estimatedDurationSeconds, 0.0)
+        assertEquals(3, viewModel.uiState.value.selectedFps)
+        assertEquals(12.0, viewModel.uiState.value.estimatedDurationSeconds, 0.0)
     }
 
     @Test
@@ -85,12 +85,12 @@ class GalleryViewModelTest {
 
         viewModel.refresh()
         advanceUntilIdle()
-        viewModel.selectFps(30)
+        viewModel.selectFps(8)
         viewModel.exportVideo()
         advanceUntilIdle()
 
         assertEquals(listOf(1L, 2L, 3L), exporter.lastExportedPhotoIds)
-        assertEquals(30, exporter.lastExportedFps)
+        assertEquals(8, exporter.lastExportedFps)
         assertNotNull(viewModel.uiState.value.exportedVideo)
         assertNull(viewModel.uiState.value.exportErrorMessage)
     }

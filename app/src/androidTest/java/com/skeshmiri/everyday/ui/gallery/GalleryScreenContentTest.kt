@@ -28,7 +28,7 @@ class GalleryScreenContentTest {
                     uiState = GalleryUiState(
                         isLoading = false,
                         photos = listOf(photo(id = 1L)),
-                        estimatedDurationSeconds = GalleryVideoExportDefaults.estimatedDurationSeconds(1, 24),
+                        estimatedDurationSeconds = GalleryVideoExportDefaults.estimatedDurationSeconds(1, 5),
                     ),
                     onOpenPhoto = {},
                     onOpenExportDialog = {},
@@ -42,7 +42,7 @@ class GalleryScreenContentTest {
     @Test
     fun exportDialogUpdatesEstimatedLengthWhenPresetChanges() {
         composeRule.setContent {
-            var selectedFps by mutableStateOf(24)
+            var selectedFps by mutableStateOf(5)
             val photos = List(36) { index -> photo(id = index.toLong()) }
 
             EverydayTheme {
@@ -64,9 +64,9 @@ class GalleryScreenContentTest {
             }
         }
 
-        composeRule.onNodeWithText("Estimated length: 1.5 seconds").assertIsDisplayed()
-        composeRule.onNodeWithText("12 fps").performClick()
-        composeRule.onNodeWithText("Estimated length: 3.0 seconds").assertIsDisplayed()
+        composeRule.onNodeWithText("Estimated length: 7.2 seconds").assertIsDisplayed()
+        composeRule.onNodeWithText("3 fps").performClick()
+        composeRule.onNodeWithText("Estimated length: 12.0 seconds").assertIsDisplayed()
     }
 
     private fun photo(id: Long) = DailyPhoto(
