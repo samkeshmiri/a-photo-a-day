@@ -214,6 +214,9 @@ fun CameraScreenContent(
                                 modifier = Modifier.height(frameHeight),
                             ) {
                                 preview()
+                                CameraFramingOverlay(
+                                    modifier = Modifier.fillMaxSize(),
+                                )
                             }
 
                             if (uiState.errorMessage != null) {

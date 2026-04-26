@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.skeshmiri.everyday.model.DailyPhoto
 import com.skeshmiri.everyday.ui.theme.EverydayTheme
@@ -65,5 +66,24 @@ class CameraScreenContentTest {
         composeRule.onNode(
             hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate),
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun showsFramingOverlayWhileReadyToCapture() {
+        composeRule.setContent {
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                    ),
+                    onRequestPermission = {},
+                    onCapture = {},
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFramingOverlayTag).assertIsDisplayed()
     }
 }
