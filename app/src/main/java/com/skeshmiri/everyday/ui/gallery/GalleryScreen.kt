@@ -103,7 +103,7 @@ internal fun GalleryScreenContent(
         modifier = modifier,
         topBar = {
             ScreenHeader(
-                title = "Gallery",
+                title = "",
                 actions = {
                     if (uiState.photos.isNotEmpty()) {
                         IconButton(onClick = onOpenExportDialog) {
