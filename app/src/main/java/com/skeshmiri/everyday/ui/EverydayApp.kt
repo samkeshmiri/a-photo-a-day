@@ -75,6 +75,7 @@ fun EverydayApp(
                     navController.navigate(
                         Destinations.Viewer.route(
                             uri = photo.uri.toString(),
+                            dateKey = photo.dateKey,
                             displayName = photo.displayName,
                         ),
                     )
@@ -122,18 +123,23 @@ fun EverydayApp(
             route = Destinations.Viewer.pattern,
             arguments = listOf(
                 navArgument(Destinations.Viewer.uriArg) { type = NavType.StringType },
+                navArgument(Destinations.Viewer.dateKeyArg) { type = NavType.StringType },
                 navArgument(Destinations.Viewer.displayNameArg) { type = NavType.StringType },
             ),
         ) { backStackEntry ->
             val uri = Uri.parse(
                 Uri.decode(backStackEntry.arguments?.getString(Destinations.Viewer.uriArg).orEmpty()),
             )
+            val dateKey = Uri.decode(
+                backStackEntry.arguments?.getString(Destinations.Viewer.dateKeyArg).orEmpty(),
+            )
             val displayName = Uri.decode(
                 backStackEntry.arguments?.getString(Destinations.Viewer.displayNameArg).orEmpty(),
             )
             PhotoViewerScreen(
                 uri = uri,
-                displayName = displayName,
+                title = dateKey,
+                contentDescription = displayName,
             )
         }
     }
@@ -154,10 +160,11 @@ private sealed class Destinations(val route: String) {
 
     data object Viewer : Destinations("viewer") {
         const val uriArg = "uri"
+        const val dateKeyArg = "dateKey"
         const val displayNameArg = "displayName"
-        const val pattern = "viewer/{$uriArg}/{$displayNameArg}"
+        const val pattern = "viewer/{$uriArg}/{$dateKeyArg}/{$displayNameArg}"
 
-        fun route(uri: String, displayName: String): String =
-            "viewer/${Uri.encode(uri)}/${Uri.encode(displayName)}"
+        fun route(uri: String, dateKey: String, displayName: String): String =
+            "viewer/${Uri.encode(uri)}/${Uri.encode(dateKey)}/${Uri.encode(displayName)}"
     }
 }
