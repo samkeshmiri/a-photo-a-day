@@ -1,0 +1,12 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "ef0cad6c421f5f6dcd7faab10e38f84475797ac9",
+  "prompts": {},
+  "humans": {
+    "h_7945ef38eec454": {
+      "author": "Sam Keshmiri"
+    }
+  }
+}
