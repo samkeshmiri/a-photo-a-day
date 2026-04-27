@@ -5,9 +5,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ImageFormat
 import android.graphics.ImageDecoder
 import android.graphics.Paint
 import android.graphics.Rect
+import android.media.Image
 import android.media.MediaCodec
 import android.media.MediaCodec.BufferInfo
 import android.media.MediaCodecInfo
@@ -21,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileDescriptor
 import java.io.IOException
+import java.nio.ByteBuffer
 import java.time.Clock
 import kotlin.math.max
 import kotlin.math.min
@@ -138,14 +141,11 @@ class MediaStoreGalleryVideoExporter(
                     canvas = frameCanvas,
                     paint = paint,
                 )
-                writeBitmapToYuv(
+                queueFrame(
+                    codec = codec,
                     bitmap = frameBitmap,
                     colorFormat = colorFormat,
                     argbPixels = argbPixels,
-                    output = yuvBytes,
-                )
-                queueFrame(
-                    codec = codec,
                     frameData = yuvBytes,
                     presentationTimeUs = frameIntervalUs * index.toLong(),
                     bufferInfo = bufferInfo,
@@ -252,6 +252,9 @@ class MediaStoreGalleryVideoExporter(
 
     private fun queueFrame(
         codec: MediaCodec,
+        bitmap: Bitmap,
+        colorFormat: EncoderColorFormat,
+        argbPixels: IntArray,
         frameData: ByteArray,
         presentationTimeUs: Long,
         bufferInfo: BufferInfo,
@@ -261,14 +264,32 @@ class MediaStoreGalleryVideoExporter(
         while (true) {
             val inputIndex = codec.dequeueInputBuffer(CODEC_TIMEOUT_US)
             if (inputIndex >= 0) {
-                val inputBuffer = codec.getInputBuffer(inputIndex)
-                    ?: throw IOException("Failed to access the video encoder input buffer.")
-                inputBuffer.clear()
-                if (inputBuffer.capacity() < frameData.size) {
-                    throw IOException("The video encoder input buffer is smaller than the frame data.")
+                when (colorFormat.bufferMode) {
+                    EncoderBufferMode.PACKED_BYTE_BUFFER -> {
+                        writeBitmapToPackedYuv(
+                            bitmap = bitmap,
+                            colorFormat = colorFormat,
+                            argbPixels = argbPixels,
+                            output = frameData,
+                        )
+                        queuePackedFrame(
+                            codec = codec,
+                            inputIndex = inputIndex,
+                            frameData = frameData,
+                            presentationTimeUs = presentationTimeUs,
+                        )
+                    }
+
+                    EncoderBufferMode.IMAGE_PLANES -> {
+                        queueImageFrame(
+                            codec = codec,
+                            inputIndex = inputIndex,
+                            bitmap = bitmap,
+                            argbPixels = argbPixels,
+                            presentationTimeUs = presentationTimeUs,
+                        )
+                    }
                 }
-                inputBuffer.put(frameData)
-                codec.queueInputBuffer(inputIndex, 0, frameData.size, presentationTimeUs, 0)
                 return
             }
 
@@ -280,6 +301,41 @@ class MediaStoreGalleryVideoExporter(
                 endOfStream = false,
             )
         }
+    }
+
+    private fun queuePackedFrame(
+        codec: MediaCodec,
+        inputIndex: Int,
+        frameData: ByteArray,
+        presentationTimeUs: Long,
+    ) {
+        val inputBuffer = codec.getInputBuffer(inputIndex)
+            ?: throw IOException("Failed to access the video encoder input buffer.")
+        inputBuffer.clear()
+        if (inputBuffer.capacity() < frameData.size) {
+            throw IOException("The video encoder input buffer is smaller than the frame data.")
+        }
+        inputBuffer.put(frameData)
+        codec.queueInputBuffer(inputIndex, 0, frameData.size, presentationTimeUs, 0)
+    }
+
+    private fun queueImageFrame(
+        codec: MediaCodec,
+        inputIndex: Int,
+        bitmap: Bitmap,
+        argbPixels: IntArray,
+        presentationTimeUs: Long,
+    ) {
+        val inputBufferSize = codec.getInputBuffer(inputIndex)?.capacity()
+            ?: throw IOException("Failed to access the video encoder input buffer.")
+        val inputImage = codec.getInputImage(inputIndex)
+            ?: throw IOException("The video encoder did not provide a writable YUV input image.")
+        writeBitmapToInputImage(
+            bitmap = bitmap,
+            argbPixels = argbPixels,
+            image = inputImage,
+        )
+        codec.queueInputBuffer(inputIndex, 0, inputBufferSize, presentationTimeUs, 0)
     }
 
     private fun queueEndOfStream(
@@ -366,7 +422,7 @@ class MediaStoreGalleryVideoExporter(
         }
     }
 
-    private fun writeBitmapToYuv(
+    private fun writeBitmapToPackedYuv(
         bitmap: Bitmap,
         colorFormat: EncoderColorFormat,
         argbPixels: IntArray,
@@ -426,20 +482,100 @@ class MediaStoreGalleryVideoExporter(
         }
     }
 
+    private fun writeBitmapToInputImage(
+        bitmap: Bitmap,
+        argbPixels: IntArray,
+        image: Image,
+    ) {
+        val planes = image.planes
+        if (image.format != ImageFormat.YUV_420_888 || planes.size < 3) {
+            throw IOException("The video encoder input image is not a writable YUV420 image.")
+        }
+
+        val width = bitmap.width
+        val height = bitmap.height
+        if (image.width < width || image.height < height) {
+            throw IOException("The video encoder input image is smaller than the rendered frame.")
+        }
+
+        bitmap.getPixels(argbPixels, 0, width, 0, 0, width, height)
+
+        val yPlane = planes[0]
+        val uPlane = planes[1]
+        val vPlane = planes[2]
+        val yBuffer = yPlane.buffer
+        val uBuffer = uPlane.buffer
+        val vBuffer = vPlane.buffer
+
+        fillBuffer(yBuffer, Y_BLACK)
+        fillBuffer(uBuffer, CHROMA_NEUTRAL)
+        fillBuffer(vBuffer, CHROMA_NEUTRAL)
+
+        for (row in 0 until height) {
+            val yRowStart = row * yPlane.rowStride
+            val pixelRowStart = row * width
+            for (column in 0 until width) {
+                val pixel = argbPixels[pixelRowStart + column]
+                yBuffer.put(
+                    yRowStart + (column * yPlane.pixelStride),
+                    rgbToLuma(
+                        red = Color.red(pixel),
+                        green = Color.green(pixel),
+                        blue = Color.blue(pixel),
+                    ).toByte(),
+                )
+            }
+        }
+
+        for (row in 0 until height step 2) {
+            val chromaRow = row / 2
+            val uRowStart = chromaRow * uPlane.rowStride
+            val vRowStart = chromaRow * vPlane.rowStride
+            for (column in 0 until width step 2) {
+                val chromaColumn = column / 2
+                var redTotal = 0
+                var greenTotal = 0
+                var blueTotal = 0
+
+                for (rowOffset in 0..1) {
+                    val pixelRowStart = (row + rowOffset) * width
+                    for (columnOffset in 0..1) {
+                        val pixel = argbPixels[pixelRowStart + column + columnOffset]
+                        redTotal += Color.red(pixel)
+                        greenTotal += Color.green(pixel)
+                        blueTotal += Color.blue(pixel)
+                    }
+                }
+
+                val redAverage = redTotal / 4
+                val greenAverage = greenTotal / 4
+                val blueAverage = blueTotal / 4
+                uBuffer.put(
+                    uRowStart + (chromaColumn * uPlane.pixelStride),
+                    rgbToChromaBlue(redAverage, greenAverage, blueAverage).toByte(),
+                )
+                vBuffer.put(
+                    vRowStart + (chromaColumn * vPlane.pixelStride),
+                    rgbToChromaRed(redAverage, greenAverage, blueAverage).toByte(),
+                )
+            }
+        }
+    }
+
+    private fun fillBuffer(buffer: ByteBuffer, value: Byte) {
+        for (index in 0 until buffer.capacity()) {
+            buffer.put(index, value)
+        }
+    }
+
     private fun selectColorFormat(codecInfo: MediaCodecInfo): EncoderColorFormat {
         val colorFormats = codecInfo.getCapabilitiesForType(MIME_TYPE_AVC).colorFormats.toSet()
         return when {
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible in colorFormats -> {
-                EncoderColorFormat(
-                    codecConstant = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible,
-                    layout = ChromaLayout.I420,
-                )
-            }
-
             MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar in colorFormats -> {
                 EncoderColorFormat(
                     codecConstant = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
                     layout = ChromaLayout.I420,
+                    bufferMode = EncoderBufferMode.PACKED_BYTE_BUFFER,
                 )
             }
 
@@ -447,6 +583,15 @@ class MediaStoreGalleryVideoExporter(
                 EncoderColorFormat(
                     codecConstant = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
                     layout = ChromaLayout.NV12,
+                    bufferMode = EncoderBufferMode.PACKED_BYTE_BUFFER,
+                )
+            }
+
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible in colorFormats -> {
+                EncoderColorFormat(
+                    codecConstant = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible,
+                    layout = ChromaLayout.I420,
+                    bufferMode = EncoderBufferMode.IMAGE_PLANES,
                 )
             }
 
@@ -489,9 +634,15 @@ class MediaStoreGalleryVideoExporter(
         NV12,
     }
 
+    private enum class EncoderBufferMode {
+        PACKED_BYTE_BUFFER,
+        IMAGE_PLANES,
+    }
+
     private data class EncoderColorFormat(
         val codecConstant: Int,
         val layout: ChromaLayout,
+        val bufferMode: EncoderBufferMode,
     )
 
     private data class MuxerState(
@@ -535,5 +686,7 @@ class MediaStoreGalleryVideoExporter(
         private const val MIME_TYPE_MP4 = "video/mp4"
         private const val MAX_VIDEO_DIMENSION = 1080
         private const val CODEC_TIMEOUT_US = 10_000L
+        private const val Y_BLACK: Byte = 16
+        private const val CHROMA_NEUTRAL: Byte = -128
     }
 }
