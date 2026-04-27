@@ -207,8 +207,8 @@ fun CameraScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(topSectionHeight)
-                                .padding(horizontal = 20.dp, vertical = 20.dp),
-                            contentAlignment = Alignment.TopCenter,
+                                .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 8.dp),
+                            contentAlignment = Alignment.BottomCenter,
                         ) {
                             FourThreePortraitFrame(
                                 modifier = Modifier.height(frameHeight),
@@ -237,8 +237,8 @@ fun CameraScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = bottomSectionHeight)
-                                .padding(horizontal = 24.dp, vertical = 20.dp),
-                            contentAlignment = Alignment.Center,
+                                .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 20.dp),
+                            contentAlignment = Alignment.TopCenter,
                         ) {
                             Button(
                                 onClick = onCapture,
