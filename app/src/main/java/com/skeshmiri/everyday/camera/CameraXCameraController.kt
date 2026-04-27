@@ -47,7 +47,6 @@ class CameraXCameraController(
             imageCapture = ImageCapture.Builder()
                 .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setJpegQuality(95)
                 .setTargetRotation(previewView.display?.rotation ?: Surface.ROTATION_0)
                 .build()
 
