@@ -67,7 +67,14 @@ class CameraXCameraController(
     override suspend fun captureToTemp(): File {
         val capture = imageCapture ?: throw IllegalStateException("Camera is not ready.")
         val outputFile = tempPhotoStore.createTempFile()
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile).build()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(outputFile)
+            .setMetadata(
+                ImageCapture.Metadata().apply {
+                    // Match the saved selfie to the front-camera preview shown in-app.
+                    setReversedHorizontal(true)
+                },
+            )
+            .build()
 
         return suspendCancellableCoroutine { continuation ->
             capture.takePicture(
