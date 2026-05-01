@@ -38,7 +38,6 @@ class GalleryScreenContentTest {
 
         composeRule.onNodeWithContentDescription("Export video").assertIsDisplayed()
     }
-
     @Test
     fun exportDialogUpdatesEstimatedLengthWhenPresetChanges() {
         composeRule.setContent {

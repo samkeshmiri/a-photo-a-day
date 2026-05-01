@@ -4,7 +4,9 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,12 +15,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material3.Button
@@ -39,6 +41,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,12 +53,16 @@ import com.skeshmiri.everyday.camera.CameraController
 import com.skeshmiri.everyday.ui.common.FourThreePortraitFrame
 import com.skeshmiri.everyday.ui.common.OnResume
 
+const val CameraCaptureButtonTag = "camera_capture_button"
+
 @Composable
 fun CameraScreen(
     viewModel: CameraViewModel,
     cameraController: CameraController,
     onOpenGallery: () -> Unit,
     onOpenReview: (dateKey: String, tempPath: String) -> Unit,
+    showFramingOverlay: Boolean,
+    onToggleFramingOverlay: () -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -92,6 +102,7 @@ fun CameraScreen(
 
     CameraScreenContent(
         uiState = uiState,
+        showFramingOverlay = showFramingOverlay,
         onRequestPermission = {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         },
@@ -100,6 +111,7 @@ fun CameraScreen(
                 onOpenReview(dateKey, tempFile.absolutePath)
             }
         },
+        onToggleFramingOverlay = onToggleFramingOverlay,
         preview = {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
@@ -119,8 +131,10 @@ fun CameraScreen(
 @Composable
 fun CameraScreenContent(
     uiState: CameraUiState,
+    showFramingOverlay: Boolean = true,
     onRequestPermission: () -> Unit,
     onCapture: () -> Unit,
+    onToggleFramingOverlay: () -> Unit = {},
     preview: @Composable () -> Unit,
 ) {
     Scaffold(modifier = Modifier.systemBarsPadding()) { innerPadding ->
@@ -218,9 +232,11 @@ fun CameraScreenContent(
                                 modifier = Modifier.height(frameHeight),
                             ) {
                                 preview()
-                                CameraFramingOverlay(
-                                    modifier = Modifier.fillMaxSize(),
-                                )
+                                if (showFramingOverlay) {
+                                    CameraFramingOverlay(
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
                             }
 
                             if (uiState.errorMessage != null) {
@@ -249,25 +265,44 @@ fun CameraScreenContent(
                                 ),
                             contentAlignment = Alignment.TopCenter,
                         ) {
-                            Button(
-                                onClick = onCapture,
+                            val captureButtonShape = RoundedCornerShape(24.dp)
+                            val captureButtonEnabled = !uiState.isCapturing
+                            val captureButtonContainerColor = if (captureButtonEnabled) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                            }
+                            val captureButtonContentColor = if (captureButtonEnabled) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                            }
+
+                            Box(
                                 modifier = Modifier
                                     .width(captureButtonWidth)
-                                    .height(captureButtonHeight),
-                                enabled = !uiState.isCapturing,
-                                shape = RoundedCornerShape(24.dp),
-                                contentPadding = PaddingValues(0.dp),
+                                    .height(captureButtonHeight)
+                                    .clip(captureButtonShape)
+                                    .background(captureButtonContainerColor)
+                                    .captureButtonInteractions(
+                                        enabled = captureButtonEnabled,
+                                        onCapture = onCapture,
+                                        onToggleFramingOverlay = onToggleFramingOverlay,
+                                        showFramingOverlay = showFramingOverlay,
+                                    ),
+                                contentAlignment = Alignment.Center,
                             ) {
                                 if (uiState.isCapturing) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(40.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = captureButtonContentColor,
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Rounded.CameraAlt,
-                                        contentDescription = "Take photo",
+                                        contentDescription = null,
                                         modifier = Modifier.size(captureButtonHeight * 0.3f),
+                                        tint = captureButtonContentColor,
                                     )
                                 }
                             }
@@ -278,3 +313,22 @@ fun CameraScreenContent(
         }
     }
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+private fun Modifier.captureButtonInteractions(
+    enabled: Boolean,
+    onCapture: () -> Unit,
+    onToggleFramingOverlay: () -> Unit,
+    showFramingOverlay: Boolean,
+): Modifier = semantics {
+    contentDescription = if (enabled) "Take photo" else "Taking photo"
+}
+    .testTag(CameraCaptureButtonTag)
+    .combinedClickable(
+        enabled = enabled,
+        role = Role.Button,
+        onClickLabel = "Take photo",
+        onLongClickLabel = if (showFramingOverlay) "Hide camera guides" else "Show camera guides",
+        onClick = onCapture,
+        onLongClick = onToggleFramingOverlay,
+    )

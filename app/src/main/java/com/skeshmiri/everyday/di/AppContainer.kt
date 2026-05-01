@@ -11,6 +11,7 @@ import com.skeshmiri.everyday.export.GalleryVideoExporter
 import com.skeshmiri.everyday.export.MediaStoreGalleryVideoExporter
 import com.skeshmiri.everyday.notifications.DailyReminderScheduler
 import com.skeshmiri.everyday.storage.TempPhotoStore
+import com.skeshmiri.everyday.ui.camera.CameraOverlayPreferences
 import java.time.Clock
 
 class AppContainer(context: Context) {
@@ -22,6 +23,7 @@ class AppContainer(context: Context) {
     val galleryVideoExporter: GalleryVideoExporter = MediaStoreGalleryVideoExporter(appContext, clock)
     val dailyCapturePolicy: DailyCapturePolicy = DefaultDailyCapturePolicy()
     val dailyReminderScheduler = DailyReminderScheduler(appContext, clock)
+    val cameraOverlayPreferences = CameraOverlayPreferences(appContext)
 
     fun createCameraController(): CameraController =
         CameraXCameraController(

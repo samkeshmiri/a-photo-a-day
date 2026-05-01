@@ -3,7 +3,9 @@ package com.skeshmiri.everyday.ui
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,6 +28,7 @@ fun EverydayApp(
     cameraController: CameraController,
 ) {
     val navController = rememberNavController()
+    val isCameraOverlayEnabled by container.cameraOverlayPreferences.isOverlayEnabled.collectAsState()
     val cameraFactory = remember(container) {
         SimpleViewModelFactory {
             CameraViewModel(
@@ -64,6 +67,8 @@ fun EverydayApp(
                 onOpenReview = { dateKey, tempPath ->
                     navController.navigate(Destinations.Review.route(dateKey, tempPath))
                 },
+                showFramingOverlay = isCameraOverlayEnabled,
+                onToggleFramingOverlay = container.cameraOverlayPreferences::toggleOverlay,
             )
         }
 
