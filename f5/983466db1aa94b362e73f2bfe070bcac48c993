@@ -1,0 +1,25 @@
+app/src/main/java/com/skeshmiri/everyday/export/MediaStoreGalleryVideoExporter.kt
+  9ae32a375cfead8b 6,26,96,114-126,206-209,213,216-221,223-235
+app/src/main/java/com/skeshmiri/everyday/export/VideoExportSettings.kt
+  9ae32a375cfead8b 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "f5983466db1aa94b362e73f2bfe070bcac48c993",
+  "prompts": {
+    "9ae32a375cfead8b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ddad3-9604-7d30-9864-2720377f5217",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 98,
+      "total_deletions": 43,
+      "accepted_lines": 96,
+      "overriden_lines": 0
+    }
+  }
+}
