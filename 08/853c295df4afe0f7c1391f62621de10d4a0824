@@ -1,0 +1,31 @@
+app/src/androidTest/java/com/skeshmiri/everyday/ui/camera/CameraScreenContentTest.kt
+  9ae32a375cfead8b 6-9,11,15,18-20,23,99-168
+app/src/main/java/com/skeshmiri/everyday/di/AppContainer.kt
+  9ae32a375cfead8b 14,26
+app/src/main/java/com/skeshmiri/everyday/ui/camera/CameraOverlayPreferences.kt
+  9ae32a375cfead8b 1-31
+app/src/main/java/com/skeshmiri/everyday/ui/camera/CameraScreen.kt
+  9ae32a375cfead8b 7,9,23,44-47,56-57,64-65,105,114,134,137,235-239,268-281,284-293,298,303,305,316-334
+app/src/main/java/com/skeshmiri/everyday/ui/EverydayApp.kt
+  9ae32a375cfead8b 6,8,31,70-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "08853c295df4afe0f7c1391f62621de10d4a0824",
+  "prompts": {
+    "9ae32a375cfead8b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ddad3-9604-7d30-9864-2720377f5217",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 261,
+      "total_deletions": 53,
+      "accepted_lines": 189,
+      "overriden_lines": 4
+    }
+  }
+}
