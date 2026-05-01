@@ -3,6 +3,7 @@ package com.skeshmiri.everyday.export
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ImageFormat
@@ -22,6 +23,7 @@ import com.skeshmiri.everyday.ui.gallery.GalleryVideoExportDefaults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileDescriptor
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.time.Clock
@@ -91,7 +93,7 @@ class MediaStoreGalleryVideoExporter(
         photos: List<DailyPhoto>,
         fps: Int,
     ) {
-        val frameSize = determineFrameSize(photos.first())
+        val frameSize = determineFrameSize(photos)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             isFilterBitmap = true
         }
@@ -101,7 +103,6 @@ class MediaStoreGalleryVideoExporter(
         val yuvBytes = ByteArray(frameSize.frameByteCount)
         val bufferInfo = BufferInfo()
         val frameIntervalUs = 1_000_000L / fps.toLong()
-        val bitrate = calculateBitrate(frameSize.width, frameSize.height)
 
         val codec = MediaCodec.createEncoderByType(MIME_TYPE_AVC)
         val muxer = MediaMuxer(outputFd, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
@@ -110,6 +111,19 @@ class MediaStoreGalleryVideoExporter(
 
         try {
             val colorFormat = selectColorFormat(codec.codecInfo)
+            val maxSupportedBitrate = codec.codecInfo
+                .getCapabilitiesForType(MIME_TYPE_AVC)
+                .videoCapabilities
+                ?.bitrateRange
+                ?.upper
+                ?: VideoExportSettings.DEFAULT_MAX_VIDEO_BITRATE
+                .coerceAtMost(VideoExportSettings.DEFAULT_MAX_VIDEO_BITRATE)
+            val bitrate = VideoExportSettings.calculateBitrate(
+                width = frameSize.width,
+                height = frameSize.height,
+                fps = fps,
+                maxBitrate = maxSupportedBitrate,
+            )
             val videoFormat = MediaFormat.createVideoFormat(MIME_TYPE_AVC, frameSize.width, frameSize.height).apply {
                 setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat.codecConstant)
                 setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
@@ -189,23 +203,36 @@ class MediaStoreGalleryVideoExporter(
         }
     }
 
-    private fun determineFrameSize(photo: DailyPhoto): VideoFrameSize {
+    private fun determineFrameSize(photos: List<DailyPhoto>): VideoExportSettings.ResolvedVideoSize =
+        VideoExportSettings.pickTargetFrameSize(photos.map(::resolveSourceImageSize))
+
+    private fun resolveSourceImageSize(photo: DailyPhoto): VideoExportSettings.SourceImageSize {
         val sourceWidth = photo.width
         val sourceHeight = photo.height
         if (sourceWidth > 0 && sourceHeight > 0) {
-            return VideoFrameSize.from(sourceWidth, sourceHeight)
+            return VideoExportSettings.SourceImageSize(sourceWidth, sourceHeight)
         }
 
-        val probeBitmap = decodeBitmap(
-            uri = photo.uri,
-            requestedWidth = MAX_VIDEO_DIMENSION,
-            requestedHeight = MAX_VIDEO_DIMENSION,
-        )
-        return try {
-            VideoFrameSize.from(probeBitmap.width, probeBitmap.height)
-        } finally {
-            probeBitmap.recycle()
+        return probeImageSize(photo.uri)
+    }
+
+    private fun probeImageSize(uri: android.net.Uri): VideoExportSettings.SourceImageSize {
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true
         }
+        contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+            BitmapFactory.decodeFileDescriptor(descriptor.fileDescriptor, null, options)
+        } ?: throw FileNotFoundException("Failed to open $uri for probing.")
+
+        val width = options.outWidth
+        val height = options.outHeight
+        if (width <= 0 || height <= 0) {
+            throw IOException("Failed to determine the source dimensions for $uri.")
+        }
+        return VideoExportSettings.SourceImageSize(
+            width = width,
+            height = height,
+        )
     }
 
     private fun decodeBitmap(
@@ -599,11 +626,6 @@ class MediaStoreGalleryVideoExporter(
         }
     }
 
-    private fun calculateBitrate(width: Int, height: Int): Int =
-        (width.toLong() * height.toLong() * 5L)
-            .coerceIn(2_000_000L, 12_000_000L)
-            .toInt()
-
     private fun buildDisplayName(
         photos: List<DailyPhoto>,
         fps: Int,
@@ -650,28 +672,6 @@ class MediaStoreGalleryVideoExporter(
         var trackIndex: Int = -1,
     )
 
-    private data class VideoFrameSize(
-        val width: Int,
-        val height: Int,
-    ) {
-        val frameByteCount: Int = width * height * 3 / 2
-
-        companion object {
-            fun from(sourceWidth: Int, sourceHeight: Int): VideoFrameSize {
-                val longestSide = max(sourceWidth, sourceHeight).coerceAtLeast(1)
-                val scale = min(1f, MAX_VIDEO_DIMENSION.toFloat() / longestSide.toFloat())
-                val scaledWidth = makeEven((sourceWidth * scale).roundToInt().coerceAtLeast(2))
-                val scaledHeight = makeEven((sourceHeight * scale).roundToInt().coerceAtLeast(2))
-                return VideoFrameSize(
-                    width = scaledWidth,
-                    height = scaledHeight,
-                )
-            }
-
-            private fun makeEven(value: Int): Int = if (value % 2 == 0) value else value - 1
-        }
-    }
-
     private fun MediaCodec.stopSafely() {
         runCatching { stop() }
     }
@@ -684,7 +684,6 @@ class MediaStoreGalleryVideoExporter(
     companion object {
         private const val MIME_TYPE_AVC = MediaFormat.MIMETYPE_VIDEO_AVC
         private const val MIME_TYPE_MP4 = "video/mp4"
-        private const val MAX_VIDEO_DIMENSION = 1080
         private const val CODEC_TIMEOUT_US = 10_000L
         private const val Y_BLACK: Byte = 16
         private const val CHROMA_NEUTRAL: Byte = -128
