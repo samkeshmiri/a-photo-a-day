@@ -39,8 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -125,12 +123,6 @@ fun CameraScreenContent(
     onCapture: () -> Unit,
     preview: @Composable () -> Unit,
 ) {
-    val density = LocalDensity.current
-    val screenHeight = with(density) {
-        LocalWindowInfo.current.containerSize.height.toDp()
-    }
-    val frameHeight = screenHeight * 0.5f
-
     Scaffold(modifier = Modifier.systemBarsPadding()) { innerPadding ->
         when {
             uiState.isLoading -> {
@@ -191,14 +183,21 @@ fun CameraScreenContent(
                         .padding(innerPadding)
                         .background(Color.Black),
                 ) {
-                    val topSectionHeight = frameHeight + 40.dp
-                    val bottomSectionHeight = (maxHeight - topSectionHeight).coerceAtLeast(160.dp)
-                    val captureButtonWidth = (maxWidth - 48.dp)
-                        .coerceAtMost(320.dp)
+                    val previewSidePadding = 12.dp
+                    val previewTopPadding = 16.dp
+                    val previewBottomPadding = 6.dp
+                    val minBottomSectionHeight = 180.dp
+                    val previewWidth = maxWidth - (previewSidePadding * 2)
+                    val desiredFrameHeight = (maxWidth - (previewSidePadding * 2)) * (4f / 3f)
+                    val maxFrameHeight = (maxHeight - minBottomSectionHeight - previewTopPadding - previewBottomPadding)
                         .coerceAtLeast(220.dp)
-                    val captureButtonHeight = (bottomSectionHeight * 0.4f)
-                        .coerceAtMost(132.dp)
-                        .coerceAtLeast(92.dp)
+                    val frameHeight = desiredFrameHeight.coerceAtMost(maxFrameHeight)
+                    val topSectionHeight = frameHeight + previewTopPadding + previewBottomPadding
+                    val bottomSectionHeight = (maxHeight - topSectionHeight).coerceAtLeast(160.dp)
+                    val captureButtonWidth = previewWidth
+                    val captureButtonHeight = (bottomSectionHeight - 36.dp)
+                        .coerceAtMost(220.dp)
+                        .coerceAtLeast(120.dp)
 
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -207,7 +206,12 @@ fun CameraScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(topSectionHeight)
-                                .padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 8.dp),
+                                .padding(
+                                    start = previewSidePadding,
+                                    top = previewTopPadding,
+                                    end = previewSidePadding,
+                                    bottom = previewBottomPadding,
+                                ),
                             contentAlignment = Alignment.BottomCenter,
                         ) {
                             FourThreePortraitFrame(
@@ -237,7 +241,12 @@ fun CameraScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = bottomSectionHeight)
-                                .padding(start = 24.dp, top = 8.dp, end = 24.dp, bottom = 20.dp),
+                                .padding(
+                                    start = previewSidePadding,
+                                    top = 20.dp,
+                                    end = previewSidePadding,
+                                    bottom = 16.dp,
+                                ),
                             contentAlignment = Alignment.TopCenter,
                         ) {
                             Button(
