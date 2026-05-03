@@ -1,0 +1,23 @@
+app/src/main/java/com/skeshmiri/everyday/ui/theme/Theme.kt
+  9ae32a375cfead8b 32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "1812a0672b48cf13ad913418f01552dfcce13ec6",
+  "prompts": {
+    "9ae32a375cfead8b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ddad3-9604-7d30-9864-2720377f5217",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 25,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
