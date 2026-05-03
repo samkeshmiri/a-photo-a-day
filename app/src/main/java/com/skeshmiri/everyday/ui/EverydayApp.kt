@@ -153,6 +153,7 @@ fun EverydayApp(
                 title = dateKey,
                 contentDescription = displayName,
                 capturedAt = capturedAt,
+                onClose = { navController.popBackStack() },
             )
         }
     }

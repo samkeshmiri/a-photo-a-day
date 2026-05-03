@@ -1,23 +1,29 @@
 package com.skeshmiri.everyday.ui.viewer
 
-import android.text.format.DateFormat
 import android.net.Uri
+import android.text.format.DateFormat
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import com.skeshmiri.everyday.ui.common.ScreenHeader
 import com.skeshmiri.everyday.ui.common.UriImage
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.Date
+import java.util.Locale
+
+const val PhotoViewerImageTag = "photo_viewer_image"
 
 @Composable
 fun PhotoViewerScreen(
@@ -25,8 +31,10 @@ fun PhotoViewerScreen(
     title: String,
     contentDescription: String,
     capturedAt: Instant?,
+    onClose: () -> Unit,
 ) {
     val context = LocalContext.current
+    val interactionSource = remember { MutableInteractionSource() }
     val headerTitle = capturedAt
         ?.let { "${formatPhotoDateTitle(title)}, ${DateFormat.getTimeFormat(context).format(Date.from(it))}" }
         ?: formatPhotoDateTitle(title)
@@ -38,7 +46,13 @@ fun PhotoViewerScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .testTag(PhotoViewerImageTag)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClose,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             UriImage(
