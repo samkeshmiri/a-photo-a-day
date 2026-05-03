@@ -21,6 +21,7 @@ import com.skeshmiri.everyday.ui.gallery.GalleryViewModel
 import com.skeshmiri.everyday.ui.review.ReviewScreen
 import com.skeshmiri.everyday.ui.review.ReviewViewModel
 import com.skeshmiri.everyday.ui.viewer.PhotoViewerScreen
+import java.time.Instant
 
 @Composable
 fun EverydayApp(
@@ -82,6 +83,7 @@ fun EverydayApp(
                             uri = photo.uri.toString(),
                             dateKey = photo.dateKey,
                             displayName = photo.displayName,
+                            capturedAtEpochMillis = photo.capturedAt.toEpochMilli(),
                         ),
                     )
                 },
@@ -130,6 +132,7 @@ fun EverydayApp(
                 navArgument(Destinations.Viewer.uriArg) { type = NavType.StringType },
                 navArgument(Destinations.Viewer.dateKeyArg) { type = NavType.StringType },
                 navArgument(Destinations.Viewer.displayNameArg) { type = NavType.StringType },
+                navArgument(Destinations.Viewer.capturedAtArg) { type = NavType.LongType },
             ),
         ) { backStackEntry ->
             val uri = Uri.parse(
@@ -141,10 +144,15 @@ fun EverydayApp(
             val displayName = Uri.decode(
                 backStackEntry.arguments?.getString(Destinations.Viewer.displayNameArg).orEmpty(),
             )
+            val capturedAtEpochMillis = backStackEntry.arguments?.getLong(Destinations.Viewer.capturedAtArg)
+            val capturedAt = capturedAtEpochMillis
+                ?.takeIf { it > 0L }
+                ?.let(Instant::ofEpochMilli)
             PhotoViewerScreen(
                 uri = uri,
                 title = dateKey,
                 contentDescription = displayName,
+                capturedAt = capturedAt,
             )
         }
     }
@@ -167,9 +175,10 @@ private sealed class Destinations(val route: String) {
         const val uriArg = "uri"
         const val dateKeyArg = "dateKey"
         const val displayNameArg = "displayName"
-        const val pattern = "viewer/{$uriArg}/{$dateKeyArg}/{$displayNameArg}"
+        const val capturedAtArg = "capturedAt"
+        const val pattern = "viewer/{$uriArg}/{$dateKeyArg}/{$displayNameArg}/{$capturedAtArg}"
 
-        fun route(uri: String, dateKey: String, displayName: String): String =
-            "viewer/${Uri.encode(uri)}/${Uri.encode(dateKey)}/${Uri.encode(displayName)}"
+        fun route(uri: String, dateKey: String, displayName: String, capturedAtEpochMillis: Long): String =
+            "viewer/${Uri.encode(uri)}/${Uri.encode(dateKey)}/${Uri.encode(displayName)}/$capturedAtEpochMillis"
     }
 }
