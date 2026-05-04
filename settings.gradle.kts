@@ -14,6 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Everyday"
+rootProject.name = "A Photo a Day"
 include(":app")
-

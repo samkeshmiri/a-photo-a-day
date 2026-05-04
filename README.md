@@ -1,6 +1,6 @@
-# Everyday
+# A Photo a Day
 
-Everyday is an offline Android photo app for taking one front-camera selfie per day and storing it in `Pictures/Everyday/`.
+A Photo a Day is an offline Android photo app for taking one front-camera selfie per day and storing it in `Pictures/Everyday/`.
 
 ## Stack
 

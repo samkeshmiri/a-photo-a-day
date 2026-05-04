@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.skeshmiri.everyday"
+    namespace = "com.skeshmiri.aphotoaday"
     compileSdkPreview = "CinnamonBun"
 
     defaultConfig {
-        applicationId = "com.skeshmiri.everyday"
+        applicationId = "com.skeshmiri.aphotoaday"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
