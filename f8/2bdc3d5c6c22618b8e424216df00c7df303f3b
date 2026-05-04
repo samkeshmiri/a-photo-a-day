@@ -1,0 +1,23 @@
+app/build.gradle.kts
+  9ae32a375cfead8b 7,11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "f82bdc3d5c6c22618b8e424216df00c7df303f3b",
+  "prompts": {
+    "9ae32a375cfead8b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ddad3-9604-7d30-9864-2720377f5217",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Sam Keshmiri",
+      "messages": [],
+      "total_additions": 4430,
+      "total_deletions": 4454,
+      "accepted_lines": 4429,
+      "overriden_lines": 0
+    }
+  }
+}
