@@ -1,11 +1,14 @@
 package com.skeshmiri.everyday.ui
 
+import android.content.ClipData
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,6 +32,7 @@ fun EverydayApp(
     cameraController: CameraController,
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val isCameraOverlayEnabled by container.cameraOverlayPreferences.isOverlayEnabled.collectAsState()
     val cameraFactory = remember(container) {
         SimpleViewModelFactory {
@@ -154,6 +158,19 @@ fun EverydayApp(
                 contentDescription = displayName,
                 capturedAt = capturedAt,
                 onClose = { navController.popBackStack() },
+                onShare = {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = context.contentResolver.getType(uri) ?: "image/*"
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        putExtra(Intent.EXTRA_TITLE, displayName)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        clipData = ClipData.newUri(context.contentResolver, displayName, uri)
+                    }
+                    val chooserIntent = Intent.createChooser(shareIntent, null).apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(chooserIntent)
+                },
             )
         }
     }

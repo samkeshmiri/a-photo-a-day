@@ -7,6 +7,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -32,6 +37,7 @@ fun PhotoViewerScreen(
     contentDescription: String,
     capturedAt: Instant?,
     onClose: () -> Unit,
+    onShare: () -> Unit,
 ) {
     val context = LocalContext.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -41,6 +47,17 @@ fun PhotoViewerScreen(
     Scaffold(
         topBar = {
             ScreenHeader(title = headerTitle)
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onShare,
+                shape = CircleShape,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Share,
+                    contentDescription = "Share photo",
+                )
+            }
         },
     ) { innerPadding ->
         Box(

@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -29,6 +30,7 @@ class PhotoViewerScreenTest {
                     contentDescription = "2026-05-03_084500.jpg",
                     capturedAt = null,
                     onClose = { closed = true },
+                    onShare = {},
                 )
             }
         }
@@ -37,6 +39,30 @@ class PhotoViewerScreenTest {
 
         composeRule.runOnIdle {
             assertTrue(closed)
+        }
+    }
+
+    @Test
+    fun tappingShareButtonCallsOnShare() {
+        var shared by mutableStateOf(false)
+
+        composeRule.setContent {
+            EverydayTheme {
+                PhotoViewerScreen(
+                    uri = Uri.parse("content://everyday/photo/1"),
+                    title = "2026-05-03",
+                    contentDescription = "2026-05-03_084500.jpg",
+                    capturedAt = null,
+                    onClose = {},
+                    onShare = { shared = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Share photo").performClick()
+
+        composeRule.runOnIdle {
+            assertTrue(shared)
         }
     }
 }
