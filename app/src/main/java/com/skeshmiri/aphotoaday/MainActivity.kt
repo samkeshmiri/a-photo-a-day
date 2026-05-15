@@ -18,14 +18,20 @@ class MainActivity : ComponentActivity() {
     private val cameraController by lazy { appContainer.createCameraController() }
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { /* reminders keep scheduling even if the user denies the permission */ }
+    ) {
+        // Reminders keep scheduling even if the user denies the permission.
+        requestMediaReadPermissionIfNeeded()
+    }
+    private val mediaReadPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { /* the gallery still shows app-owned photos if the user denies access */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         appContainer.tempPhotoStore.cleanupStaleFiles()
         appContainer.dailyReminderScheduler.initialize()
-        requestNotificationPermissionIfNeeded()
+        requestStartupPermissionsIfNeeded()
 
         setContent {
             EverydayTheme {
@@ -42,8 +48,14 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    private fun requestStartupPermissionsIfNeeded() {
+        if (!requestNotificationPermissionIfNeeded()) {
+            requestMediaReadPermissionIfNeeded()
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
 
         val isGranted = ContextCompat.checkSelfPermission(
             this,
@@ -51,6 +63,32 @@ class MainActivity : ComponentActivity() {
         ) == PackageManager.PERMISSION_GRANTED
         if (!isGranted) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return true
         }
+        return false
+    }
+
+    private fun requestMediaReadPermissionIfNeeded(): Boolean {
+        if (!hasMediaReadPermission()) {
+            mediaReadPermissionLauncher.launch(mediaReadPermissions())
+            return true
+        }
+        return false
+    }
+
+    private fun hasMediaReadPermission(): Boolean {
+        val permissions = mediaReadPermissions()
+        return permissions.any { permission ->
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun mediaReadPermissions(): Array<String> = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+        )
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+        else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
 }
