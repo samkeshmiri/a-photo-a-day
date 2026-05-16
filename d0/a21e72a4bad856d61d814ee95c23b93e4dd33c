@@ -1,0 +1,23 @@
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/onboarding/PermissionIntroScreenTest.kt
+  s_ba7a5e89822a5c::t_c55e631f5e0d52 1-48
+app/src/main/java/com/skeshmiri/aphotoaday/MainActivity.kt
+  s_ba7a5e89822a5c::t_c55e631f5e0d52 4,12-14,18,22,25-27,43,47-62,65-68,83,90-100,124-127
+app/src/main/java/com/skeshmiri/aphotoaday/ui/onboarding/PermissionIntroScreen.kt
+  s_ba7a5e89822a5c::t_c55e631f5e0d52 1-142
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "d0a21e72a4bad856d61d814ee95c23b93e4dd33c",
+  "prompts": {},
+  "sessions": {
+    "s_ba7a5e89822a5c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e2d32-2e64-7242-9fc0-7e68f878ee96",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
