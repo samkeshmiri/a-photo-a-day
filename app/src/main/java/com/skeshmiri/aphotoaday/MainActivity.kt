@@ -1,6 +1,7 @@
 package com.skeshmiri.aphotoaday
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -8,14 +9,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.skeshmiri.aphotoaday.di.AppContainer
 import com.skeshmiri.aphotoaday.ui.EverydayApp
+import com.skeshmiri.aphotoaday.ui.onboarding.PermissionIntroScreen
 import com.skeshmiri.aphotoaday.ui.theme.EverydayTheme
 
 class MainActivity : ComponentActivity() {
+    private var showPermissionIntro by mutableStateOf(false)
     private val appContainer by lazy { AppContainer(applicationContext) }
     private val cameraController by lazy { appContainer.createCameraController() }
+    private val permissionIntroPreferences by lazy {
+        getSharedPreferences(PERMISSION_INTRO_PREFERENCES_NAME, Context.MODE_PRIVATE)
+    }
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) {
@@ -31,15 +40,31 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         appContainer.tempPhotoStore.cleanupStaleFiles()
         appContainer.dailyReminderScheduler.initialize()
-        requestStartupPermissionsIfNeeded()
+        showPermissionIntro = shouldShowStartupPermissionIntro()
 
         setContent {
             EverydayTheme {
-                EverydayApp(
-                    container = appContainer,
-                    cameraController = cameraController,
-                )
+                if (showPermissionIntro) {
+                    PermissionIntroScreen(
+                        onContinue = {
+                            permissionIntroPreferences.edit()
+                                .putBoolean(PERMISSION_INTRO_SEEN_KEY, true)
+                                .apply()
+                            showPermissionIntro = false
+                            requestStartupPermissionsIfNeeded()
+                        },
+                    )
+                } else {
+                    EverydayApp(
+                        container = appContainer,
+                        cameraController = cameraController,
+                    )
+                }
             }
+        }
+
+        if (!showPermissionIntro) {
+            requestStartupPermissionsIfNeeded()
         }
     }
 
@@ -55,18 +80,23 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermissionIfNeeded(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
-
-        val isGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.POST_NOTIFICATIONS,
-        ) == PackageManager.PERMISSION_GRANTED
-        if (!isGranted) {
+        if (needsNotificationPermission()) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             return true
         }
         return false
     }
+
+    private fun shouldShowStartupPermissionIntro(): Boolean =
+        !permissionIntroPreferences.getBoolean(PERMISSION_INTRO_SEEN_KEY, false) &&
+            (needsNotificationPermission() || !hasMediaReadPermission())
+
+    private fun needsNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
 
     private fun requestMediaReadPermissionIfNeeded(): Boolean {
         if (!hasMediaReadPermission()) {
@@ -90,5 +120,10 @@ class MainActivity : ComponentActivity() {
         )
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
         else -> arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+
+    private companion object {
+        const val PERMISSION_INTRO_PREFERENCES_NAME = "permission_intro"
+        const val PERMISSION_INTRO_SEEN_KEY = "seen"
     }
 }
