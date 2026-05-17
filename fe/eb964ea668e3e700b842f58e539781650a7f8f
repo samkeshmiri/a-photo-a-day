@@ -1,0 +1,19 @@
+app/build.gradle.kts
+  s_ba7a5e89822a5c::t_bec9ec11a09ff1 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "feeb964ea668e3e700b842f58e539781650a7f8f",
+  "prompts": {},
+  "sessions": {
+    "s_ba7a5e89822a5c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e2d32-2e64-7242-9fc0-7e68f878ee96",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
