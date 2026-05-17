@@ -16,15 +16,17 @@ const val CameraFramingOverlayTag = "camera_framing_overlay"
 
 private val DefaultFramingOverlayColor = BlushPop
 
-private const val LeftEyeGuideX = 0.41f
-private const val RightEyeGuideX = 0.59f
-private const val EyesGuideY = 0.48f
+private const val MinimumEyeGuideOffset = 0.04f
+private const val MaximumEyeGuideOffset = 0.14f
+private const val TopEyeGuideY = 0.35f
+private const val BottomEyeGuideY = 0.61f
 private const val HorizontalInsetFraction = 0.04f
 private const val VerticalInsetFraction = 0.03f
 
 @Composable
 fun CameraFramingOverlay(
     modifier: Modifier = Modifier,
+    guideSettings: CameraGuideSettings = CameraGuideSettings(),
     strokeColor: Color = DefaultFramingOverlayColor,
     strokeWidth: Dp = 2.dp,
 ) {
@@ -41,27 +43,43 @@ fun CameraFramingOverlay(
         val horizontalEndX = size.width * (1f - HorizontalInsetFraction)
         val verticalStartY = size.height * VerticalInsetFraction
         val verticalEndY = size.height * (1f - VerticalInsetFraction)
+        val normalizedSettings = guideSettings.normalized()
+        val eyeGuideOffset = lerp(
+            start = MaximumEyeGuideOffset,
+            stop = MinimumEyeGuideOffset,
+            fraction = normalizedSettings.verticalGuideProgress,
+        )
+        val leftEyeGuideX = 0.5f - eyeGuideOffset
+        val rightEyeGuideX = 0.5f + eyeGuideOffset
+        val eyesGuideY = lerp(
+            start = TopEyeGuideY,
+            stop = BottomEyeGuideY,
+            fraction = normalizedSettings.horizontalGuideProgress,
+        )
 
         drawLine(
             color = lineColor,
-            start = Offset(horizontalStartX, size.height * EyesGuideY),
-            end = Offset(horizontalEndX, size.height * EyesGuideY),
+            start = Offset(horizontalStartX, size.height * eyesGuideY),
+            end = Offset(horizontalEndX, size.height * eyesGuideY),
             strokeWidth = stroke.width,
             cap = StrokeCap.Round,
         )
         drawLine(
             color = lineColor,
-            start = Offset(size.width * LeftEyeGuideX, verticalStartY),
-            end = Offset(size.width * LeftEyeGuideX, verticalEndY),
+            start = Offset(size.width * leftEyeGuideX, verticalStartY),
+            end = Offset(size.width * leftEyeGuideX, verticalEndY),
             strokeWidth = stroke.width,
             cap = StrokeCap.Round,
         )
         drawLine(
             color = lineColor,
-            start = Offset(size.width * RightEyeGuideX, verticalStartY),
-            end = Offset(size.width * RightEyeGuideX, verticalEndY),
+            start = Offset(size.width * rightEyeGuideX, verticalStartY),
+            end = Offset(size.width * rightEyeGuideX, verticalEndY),
             strokeWidth = stroke.width,
             cap = StrokeCap.Round,
         )
     }
 }
+
+private fun lerp(start: Float, stop: Float, fraction: Float): Float =
+    start + ((stop - start) * fraction.coerceIn(CameraGuideSettings.MIN_PROGRESS, CameraGuideSettings.MAX_PROGRESS))

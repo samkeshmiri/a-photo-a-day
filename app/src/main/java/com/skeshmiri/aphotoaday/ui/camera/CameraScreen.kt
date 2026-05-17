@@ -62,6 +62,7 @@ fun CameraScreen(
     onOpenGallery: () -> Unit,
     onOpenReview: (dateKey: String, tempPath: String) -> Unit,
     showFramingOverlay: Boolean,
+    guideSettings: CameraGuideSettings,
     onToggleFramingOverlay: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -103,6 +104,7 @@ fun CameraScreen(
     CameraScreenContent(
         uiState = uiState,
         showFramingOverlay = showFramingOverlay,
+        guideSettings = guideSettings,
         onRequestPermission = {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         },
@@ -132,6 +134,7 @@ fun CameraScreen(
 fun CameraScreenContent(
     uiState: CameraUiState,
     showFramingOverlay: Boolean = true,
+    guideSettings: CameraGuideSettings = CameraGuideSettings(),
     onRequestPermission: () -> Unit,
     onCapture: () -> Unit,
     onToggleFramingOverlay: () -> Unit = {},
@@ -235,6 +238,7 @@ fun CameraScreenContent(
                                 if (showFramingOverlay) {
                                     CameraFramingOverlay(
                                         modifier = Modifier.fillMaxSize(),
+                                        guideSettings = guideSettings,
                                     )
                                 }
                             }

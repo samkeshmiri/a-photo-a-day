@@ -32,12 +32,33 @@ class GalleryScreenContentTest {
                     ),
                     onOpenPhoto = {},
                     onOpenExportDialog = {},
+                    onOpenGuideSettings = {},
                 )
             }
         }
 
         composeRule.onNodeWithContentDescription("Export video").assertIsDisplayed()
     }
+
+    @Test
+    fun showsGuideSettingsAction() {
+        composeRule.setContent {
+            EverydayTheme {
+                GalleryScreenContent(
+                    uiState = GalleryUiState(
+                        isLoading = false,
+                        photos = emptyList(),
+                    ),
+                    onOpenPhoto = {},
+                    onOpenExportDialog = {},
+                    onOpenGuideSettings = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Guide settings").assertIsDisplayed()
+    }
+
     @Test
     fun exportDialogUpdatesEstimatedLengthWhenPresetChanges() {
         composeRule.setContent {

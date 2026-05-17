@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MovieCreation
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +62,7 @@ import java.util.Locale
 fun GalleryScreen(
     viewModel: GalleryViewModel,
     onOpenPhoto: (DailyPhoto) -> Unit,
+    onOpenGuideSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExportDialog by rememberSaveable { mutableStateOf(false) }
@@ -79,6 +81,7 @@ fun GalleryScreen(
             viewModel.clearExportFeedback()
             showExportDialog = true
         },
+        onOpenGuideSettings = onOpenGuideSettings,
     )
 
     if (showExportDialog) {
@@ -97,19 +100,34 @@ internal fun GalleryScreenContent(
     uiState: GalleryUiState,
     onOpenPhoto: (DailyPhoto) -> Unit,
     onOpenExportDialog: () -> Unit,
+    onOpenGuideSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
-            if (uiState.photos.isNotEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.End,
+            ) {
+                if (uiState.photos.isNotEmpty()) {
+                    FloatingActionButton(
+                        onClick = onOpenExportDialog,
+                        shape = CircleShape,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.MovieCreation,
+                            contentDescription = "Export video",
+                        )
+                    }
+                }
                 FloatingActionButton(
-                    onClick = onOpenExportDialog,
+                    onClick = onOpenGuideSettings,
                     shape = CircleShape,
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.MovieCreation,
-                        contentDescription = "Export video",
+                        imageVector = Icons.Rounded.Settings,
+                        contentDescription = "Guide settings",
                     )
                 }
             }

@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.skeshmiri.aphotoaday.camera.CameraController
 import com.skeshmiri.aphotoaday.di.AppContainer
+import com.skeshmiri.aphotoaday.ui.camera.CameraGuideCalibrationScreen
 import com.skeshmiri.aphotoaday.ui.camera.CameraScreen
 import com.skeshmiri.aphotoaday.ui.camera.CameraViewModel
 import com.skeshmiri.aphotoaday.ui.common.SimpleViewModelFactory
@@ -34,6 +35,7 @@ fun EverydayApp(
     val navController = rememberNavController()
     val context = LocalContext.current
     val isCameraOverlayEnabled by container.cameraOverlayPreferences.isOverlayEnabled.collectAsState()
+    val cameraGuideSettings by container.cameraOverlayPreferences.guideSettings.collectAsState()
     val cameraFactory = remember(container) {
         SimpleViewModelFactory {
             CameraViewModel(
@@ -73,6 +75,7 @@ fun EverydayApp(
                     navController.navigate(Destinations.Review.route(dateKey, tempPath))
                 },
                 showFramingOverlay = isCameraOverlayEnabled,
+                guideSettings = cameraGuideSettings,
                 onToggleFramingOverlay = container.cameraOverlayPreferences::toggleOverlay,
             )
         }
@@ -91,6 +94,21 @@ fun EverydayApp(
                         ),
                     )
                 },
+                onOpenGuideSettings = {
+                    navController.navigate(Destinations.GuideCalibration.route) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(Destinations.GuideCalibration.route) {
+            CameraGuideCalibrationScreen(
+                cameraController = cameraController,
+                guideSettings = cameraGuideSettings,
+                onVerticalGuideProgressChange = container.cameraOverlayPreferences::setVerticalGuideProgress,
+                onHorizontalGuideProgressChange = container.cameraOverlayPreferences::setHorizontalGuideProgress,
+                onClose = { navController.popBackStack() },
             )
         }
 
@@ -179,6 +197,7 @@ fun EverydayApp(
 private sealed class Destinations(val route: String) {
     data object Camera : Destinations("camera")
     data object Gallery : Destinations("gallery")
+    data object GuideCalibration : Destinations("guide-calibration")
 
     data object Review : Destinations("review") {
         const val dateKeyArg = "dateKey"
