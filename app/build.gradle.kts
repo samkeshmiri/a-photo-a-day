@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.skeshmiri.aphotoaday"
-    compileSdkPreview = "CinnamonBun"
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.skeshmiri.aphotoaday"
