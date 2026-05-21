@@ -1,0 +1,26 @@
+.gitignore
+  s_a4887517c06957::t_b974442bb8cae5 9
+.github/workflows/android-release.yml
+  s_a4887517c06957::t_b974442bb8cae5 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "08a4daf2418bc07a5eeeffa6dbd72f7ab3fe2652",
+  "prompts": {},
+  "humans": {
+    "h_96125ec32a2ecd": {
+      "author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_a4887517c06957": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e4c5c-0072-7993-8c95-1c2b8ebec0ec",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
