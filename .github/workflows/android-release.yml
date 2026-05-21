@@ -1,0 +1,54 @@
+name: Android Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build unsigned APK and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build unsigned release APK
+        run: ./gradlew :app:testDebugUnitTest :app:assembleRelease
+
+      - name: Prepare release metadata
+        id: release_meta
+        shell: bash
+        run: |
+          short_sha="${GITHUB_SHA::7}"
+          asset_name="a-photo-a-day-release-${short_sha}-unsigned.apk"
+          cp app/build/outputs/apk/release/app-release-unsigned.apk "${asset_name}"
+          {
+            echo "short_sha=${short_sha}"
+            echo "tag=release-${GITHUB_SHA}"
+            echo "asset_name=${asset_name}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: A Photo a Day ${{ steps.release_meta.outputs.short_sha }}
+          files: ${{ steps.release_meta.outputs.asset_name }}
+          generate_release_notes: true
