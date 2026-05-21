@@ -66,7 +66,7 @@ class DailyReminderReceiver : BroadcastReceiver() {
 
     private fun buildReminderNotification(context: Context) =
         NotificationCompat.Builder(context, DailyReminderScheduler.CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setSmallIcon(R.drawable.ic_notification_photo_of_the_day)
             .setContentTitle(context.getString(R.string.notification_title))
             .setContentText(context.getString(R.string.notification_body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
