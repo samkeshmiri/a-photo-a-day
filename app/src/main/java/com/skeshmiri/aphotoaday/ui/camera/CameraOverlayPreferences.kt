@@ -46,7 +46,7 @@ class CameraOverlayPreferences(context: Context) {
         setGuideSettings(_guideSettings.value.copy(horizontalGuideProgress = progress))
     }
 
-    private fun setGuideSettings(settings: CameraGuideSettings) {
+    fun setGuideSettings(settings: CameraGuideSettings) {
         val normalizedSettings = settings.normalized()
         if (_guideSettings.value == normalizedSettings) return
         preferences.edit()

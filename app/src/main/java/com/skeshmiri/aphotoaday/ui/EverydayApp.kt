@@ -106,8 +106,7 @@ fun EverydayApp(
             CameraGuideCalibrationScreen(
                 cameraController = cameraController,
                 guideSettings = cameraGuideSettings,
-                onVerticalGuideProgressChange = container.cameraOverlayPreferences::setVerticalGuideProgress,
-                onHorizontalGuideProgressChange = container.cameraOverlayPreferences::setHorizontalGuideProgress,
+                onSaveGuideSettings = container.cameraOverlayPreferences::setGuideSettings,
                 onClose = { navController.popBackStack() },
             )
         }
