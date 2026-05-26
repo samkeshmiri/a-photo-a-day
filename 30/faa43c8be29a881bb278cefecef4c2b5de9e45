@@ -1,0 +1,31 @@
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/camera/CameraGuideCalibrationScreenContentTest.kt
+  s_0eefff078fb584::t_91690d16240490 5-6,13,33-35,45-46,50-120,123-125,136-138
+  s_0eefff078fb584::t_6edec4d64d2124 15,121-122
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraOverlayPreferences.kt
+  s_0eefff078fb584::t_28171cdbac9446 49
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraGuideCalibrationScreen.kt
+  s_0eefff078fb584::t_a2cab98fba5e2d 14,21,24-25,30,58-59,65,72-75,103,107-115,140-142,186,255-288
+app/src/main/java/com/skeshmiri/aphotoaday/ui/EverydayApp.kt
+  s_0eefff078fb584::t_58f1aa8f4c83bc 109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "30faa43c8be29a881bb278cefecef4c2b5de9e45",
+  "prompts": {},
+  "humans": {
+    "h_96125ec32a2ecd": {
+      "author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_0eefff078fb584": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e63ae-1ad0-7d00-adfb-927ebd40a575",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
