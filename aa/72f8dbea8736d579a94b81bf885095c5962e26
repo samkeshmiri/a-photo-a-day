@@ -1,0 +1,26 @@
+.github/workflows/android-release.yml
+  s_81614ce88f7d1e::t_3f141ee5932e68 13,32-43,46-50,56-57
+app/build.gradle.kts
+  s_81614ce88f7d1e::t_51c89fb0f6b31c 6-17,35-45,49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "aa72f8dbea8736d579a94b81bf885095c5962e26",
+  "prompts": {},
+  "humans": {
+    "h_96125ec32a2ecd": {
+      "author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_81614ce88f7d1e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e6e2a-c2ae-7d71-bb1c-ff9f66a7f4e7",
+        "model": "gpt-5.5"
+      },
+      "human_author": null
+    }
+  }
+}
