@@ -1,0 +1,21 @@
+.github/workflows/android-release.yml
+  s_81614ce88f7d1e::t_3f141ee5932e68 13,32-43,46-50,56-57
+app/build.gradle.kts
+  s_81614ce88f7d1e::t_51c89fb0f6b31c 6-17,35-45,49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "9209d32a712609061e4a9e74d1012fa120b04faf",
+  "prompts": {},
+  "sessions": {
+    "s_81614ce88f7d1e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e6e2a-c2ae-7d71-bb1c-ff9f66a7f4e7",
+        "model": "gpt-5.5"
+      },
+      "human_author": null
+    }
+  }
+}
