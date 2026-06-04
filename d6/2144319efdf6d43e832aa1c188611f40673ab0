@@ -1,0 +1,21 @@
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraFramingOverlay.kt
+  s_681e60712d346e::t_aa385d80fe2206 22
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraGuideCalibrationScreen.kt
+  s_681e60712d346e::t_93032de18cc7b1 33,56,319-321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "d62144319efdf6d43e832aa1c188611f40673ab0",
+  "prompts": {},
+  "sessions": {
+    "s_681e60712d346e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e91cb-3f2a-75e0-b744-487332fef031",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
