@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -52,6 +53,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.skeshmiri.aphotoaday.camera.CameraController
 import com.skeshmiri.aphotoaday.ui.common.FourThreePortraitFrame
 import com.skeshmiri.aphotoaday.ui.common.OnResume
+import com.skeshmiri.aphotoaday.ui.theme.Snow
 
 const val CameraGuideVerticalSliderTag = "camera_guide_vertical_slider"
 const val CameraGuideHorizontalSliderTag = "camera_guide_horizontal_slider"
@@ -314,6 +316,9 @@ private fun GuideSlider(
             value = value,
             onValueChange = onValueChange,
             valueRange = CameraGuideSettings.MIN_PROGRESS..CameraGuideSettings.MAX_PROGRESS,
+            colors = SliderDefaults.colors(
+                thumbColor = Snow,
+            ),
             modifier = modifier
                 .fillMaxWidth()
                 .semantics {

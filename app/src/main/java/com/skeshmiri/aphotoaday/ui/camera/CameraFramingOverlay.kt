@@ -19,7 +19,7 @@ private val DefaultFramingOverlayColor = BlushPop
 private const val MinimumEyeGuideOffset = 0.04f
 private const val MaximumEyeGuideOffset = 0.14f
 private const val TopEyeGuideY = 0.35f
-private const val BottomEyeGuideY = 0.61f
+private const val BottomEyeGuideY = 0.66f
 private const val HorizontalInsetFraction = 0.04f
 private const val VerticalInsetFraction = 0.03f
 
