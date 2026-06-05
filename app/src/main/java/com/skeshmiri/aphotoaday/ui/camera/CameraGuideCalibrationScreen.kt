@@ -17,10 +17,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.Save
 import androidx.compose.material3.Button
@@ -38,12 +41,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -51,18 +61,27 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.skeshmiri.aphotoaday.camera.CameraController
+import com.skeshmiri.aphotoaday.data.DailyPhotoRepository
+import com.skeshmiri.aphotoaday.model.DailyPhoto
 import com.skeshmiri.aphotoaday.ui.common.FourThreePortraitFrame
 import com.skeshmiri.aphotoaday.ui.common.OnResume
+import com.skeshmiri.aphotoaday.ui.common.UriImage
+import com.skeshmiri.aphotoaday.ui.theme.JetBlack
 import com.skeshmiri.aphotoaday.ui.theme.Snow
 
 const val CameraGuideVerticalSliderTag = "camera_guide_vertical_slider"
 const val CameraGuideHorizontalSliderTag = "camera_guide_horizontal_slider"
 const val CameraGuideSaveButtonTag = "camera_guide_save_button"
 const val CameraGuideResetButtonTag = "camera_guide_reset_button"
+const val CameraGuideLatestPhotoOverlayButtonTag = "camera_guide_latest_photo_overlay_button"
+const val CameraGuideLatestPhotoOverlayTag = "camera_guide_latest_photo_overlay"
+private const val CameraGuideMiddleProgress = 0.5f
+private const val SliderDoubleTapTimeoutMillis = 300L
 
 @Composable
 fun CameraGuideCalibrationScreen(
     cameraController: CameraController,
+    dailyPhotoRepository: DailyPhotoRepository,
     guideSettings: CameraGuideSettings,
     onSaveGuideSettings: (CameraGuideSettings) -> Unit,
     onClose: () -> Unit,
@@ -75,6 +94,8 @@ fun CameraGuideCalibrationScreen(
     var draftGuideSettings by remember(savedGuideSettings) {
         mutableStateOf(savedGuideSettings)
     }
+    var latestPhoto by remember { mutableStateOf<DailyPhoto?>(null) }
+    var showLatestPhotoOverlay by rememberSaveable { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -91,6 +112,16 @@ fun CameraGuideCalibrationScreen(
             runCatching { cameraController.bind(lifecycleOwner, boundPreview) }
         } else {
             cameraController.unbind()
+        }
+    }
+
+    LaunchedEffect(dailyPhotoRepository) {
+        val loadedLatestPhoto = runCatching {
+            dailyPhotoRepository.listAll().firstOrNull()
+        }.getOrNull()
+        latestPhoto = loadedLatestPhoto
+        if (loadedLatestPhoto == null) {
+            showLatestPhotoOverlay = false
         }
     }
 
@@ -115,6 +146,9 @@ fun CameraGuideCalibrationScreen(
         hasUnsavedChanges = draftGuideSettings != savedGuideSettings,
         onSaveGuideSettings = { onSaveGuideSettings(draftGuideSettings) },
         onResetGuideSettings = { draftGuideSettings = savedGuideSettings },
+        latestPhoto = latestPhoto,
+        showLatestPhotoOverlay = showLatestPhotoOverlay,
+        onLatestPhotoOverlayCheckedChange = { checked -> showLatestPhotoOverlay = checked },
         onClose = onClose,
         preview = {
             AndroidView(
@@ -143,6 +177,9 @@ fun CameraGuideCalibrationScreenContent(
     onSaveGuideSettings: () -> Unit,
     onResetGuideSettings: () -> Unit,
     onClose: () -> Unit,
+    latestPhoto: DailyPhoto? = null,
+    showLatestPhotoOverlay: Boolean = false,
+    onLatestPhotoOverlayCheckedChange: (Boolean) -> Unit = {},
     preview: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -213,6 +250,17 @@ fun CameraGuideCalibrationScreenContent(
                             modifier = Modifier.height(frameHeight),
                         ) {
                             preview()
+                            if (showLatestPhotoOverlay && latestPhoto != null) {
+                                UriImage(
+                                    uri = latestPhoto.uri,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .alpha(0.25f)
+                                        .testTag(CameraGuideLatestPhotoOverlayTag),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
                             CameraFramingOverlay(
                                 modifier = Modifier.fillMaxSize(),
                                 guideSettings = guideSettings,
@@ -256,8 +304,16 @@ fun CameraGuideCalibrationScreenContent(
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            LatestPhotoOverlayToggleButton(
+                                checked = showLatestPhotoOverlay && latestPhoto != null,
+                                enabled = latestPhoto != null,
+                                onCheckedChange = onLatestPhotoOverlayCheckedChange,
+                                modifier = Modifier.testTag(CameraGuideLatestPhotoOverlayButtonTag),
+                            )
+
                             Button(
                                 onClick = onSaveGuideSettings,
                                 modifier = Modifier
@@ -296,6 +352,54 @@ fun CameraGuideCalibrationScreenContent(
 }
 
 @Composable
+private fun LatestPhotoOverlayToggleButton(
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val containerColor = when {
+        !enabled -> Snow.copy(alpha = 0.24f)
+        checked -> Snow
+        else -> Snow.copy(alpha = 0.72f)
+    }
+    val contentColor = if (enabled) {
+        JetBlack
+    } else {
+        JetBlack.copy(alpha = 0.42f)
+    }
+    val description = if (checked) {
+        "Hide latest photo overlay"
+    } else {
+        "Show latest photo overlay"
+    }
+
+    Box(
+        modifier = modifier
+            .size(width = 80.dp, height = 72.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(containerColor)
+            .semantics {
+                contentDescription = description
+            }
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = onCheckedChange,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Person,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(28.dp),
+        )
+    }
+}
+
+@Composable
 private fun GuideSlider(
     label: String,
     value: Float,
@@ -321,12 +425,39 @@ private fun GuideSlider(
             ),
             modifier = modifier
                 .fillMaxWidth()
+                .snapGuideSliderToMiddleOnDoubleTap {
+                    onValueChange(CameraGuideMiddleProgress)
+                }
                 .semantics {
                     this.contentDescription = contentDescription
                 },
         )
     }
 }
+
+private fun Modifier.snapGuideSliderToMiddleOnDoubleTap(onSnap: () -> Unit): Modifier =
+    pointerInput(onSnap) {
+        var lastTapUpTimeMillis = 0L
+
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Final)
+                val upChange = event.changes.firstOrNull { change ->
+                    !change.pressed && change.previousPressed
+                }
+
+                if (upChange != null && event.changes.none { it.pressed }) {
+                    val tapUpTimeMillis = upChange.uptimeMillis
+                    if (tapUpTimeMillis - lastTapUpTimeMillis <= SliderDoubleTapTimeoutMillis) {
+                        onSnap()
+                        lastTapUpTimeMillis = 0L
+                    } else {
+                        lastTapUpTimeMillis = tapUpTimeMillis
+                    }
+                }
+            }
+        }
+    }
 
 private fun Context.hasCameraPermission(): Boolean =
     ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED

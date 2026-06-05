@@ -105,6 +105,7 @@ fun EverydayApp(
         composable(Destinations.GuideCalibration.route) {
             CameraGuideCalibrationScreen(
                 cameraController = cameraController,
+                dailyPhotoRepository = container.dailyPhotoRepository,
                 guideSettings = cameraGuideSettings,
                 onSaveGuideSettings = container.cameraOverlayPreferences::setGuideSettings,
                 onClose = { navController.popBackStack() },
