@@ -1,0 +1,42 @@
+app/src/main/java/com/skeshmiri/aphotoaday/MainActivity.kt
+  s_cb72ba730297f4::t_476017f543d3ea 45-49,82-85,107,124-136
+  s_cb72ba730297f4::t_3097b5983055dd 32,36,40-41,50-51,64,81,86,90-94
+  s_cb72ba730297f4::t_7b3dfbd2510553 33-35,42-44
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/onboarding/PermissionIntroScreenTest.kt
+  s_cb72ba730297f4::t_f59c850275edb7 28-29
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraScreen.kt
+  s_cb72ba730297f4::t_a3cf831a10644b 45,55-56,67-68,105,112,134,137,140-149,239,245-257,287-292,315,341-389,396,398
+  s_cb72ba730297f4::t_72acd1bd9ec695 173,177
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraViewModel.kt
+  s_cb72ba730297f4::t_b72fbb5db2b407 27,60-63,68
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraOverlayPreferences.kt
+  s_cb72ba730297f4::t_dcf9b7ac630407 25-27,31,63-70,76
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/camera/CameraScreenContentTest.kt
+  s_cb72ba730297f4::t_7e7f17133e79e1 34,48-50
+  s_cb72ba730297f4::t_268b2ac397486f 91-197,199-215
+  s_cb72ba730297f4::t_3edea0d7ed1d29 13,198
+app/src/androidTest/java/com/skeshmiri/aphotoaday/data/MediaStorePhotoMapperTest.kt
+  s_cb72ba730297f4::t_d846c598a61964 10,29
+app/src/main/java/com/skeshmiri/aphotoaday/ui/EverydayApp.kt
+  s_cb72ba730297f4::t_3cab9d81f2c84a 39,81-82
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/camera/CameraViewModelTest.kt
+  s_cb72ba730297f4::t_5b41ec81604896 1-90
+app/src/main/java/com/skeshmiri/aphotoaday/ui/onboarding/PermissionIntroScreen.kt
+  s_cb72ba730297f4::t_171df1a942f263 15,49,77-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "02f2dcf99dc2bf9d5d0a6941c36564e463f10699",
+  "prompts": {},
+  "sessions": {
+    "s_cb72ba730297f4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e9e09-61d9-7840-aaaf-69fe33f52345",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
