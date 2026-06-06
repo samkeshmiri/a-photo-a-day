@@ -24,6 +24,7 @@ data class CameraUiState(
     val isLoading: Boolean = true,
     val isCapturing: Boolean = false,
     val todayPhoto: DailyPhoto? = null,
+    val hasAnySavedPhotos: Boolean = false,
     val errorMessage: String? = null,
 )
 
@@ -56,12 +57,15 @@ class CameraViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
-                dailyPhotoRepository.getToday(DailyPhotoNaming.todayDateKey(clock))
-            }.onSuccess { todayPhoto ->
+                val todayPhoto = dailyPhotoRepository.getToday(DailyPhotoNaming.todayDateKey(clock))
+                val hasAnySavedPhotos = todayPhoto != null || dailyPhotoRepository.listAll().isNotEmpty()
+                todayPhoto to hasAnySavedPhotos
+            }.onSuccess { (todayPhoto, hasAnySavedPhotos) ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         todayPhoto = todayPhoto,
+                        hasAnySavedPhotos = hasAnySavedPhotos,
                     )
                 }
             }.onFailure { error ->
@@ -102,4 +106,3 @@ class CameraViewModel(
         }
     }
 }
-

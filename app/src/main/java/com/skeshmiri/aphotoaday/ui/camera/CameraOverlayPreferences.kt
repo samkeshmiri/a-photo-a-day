@@ -22,9 +22,13 @@ class CameraOverlayPreferences(context: Context) {
             ),
         ).normalized(),
     )
+    private val _hasSeenFirstPhotoInstructions = MutableStateFlow(
+        preferences.getBoolean(KEY_FIRST_PHOTO_INSTRUCTIONS_SEEN, false),
+    )
 
     val isOverlayEnabled: StateFlow<Boolean> = _isOverlayEnabled.asStateFlow()
     val guideSettings: StateFlow<CameraGuideSettings> = _guideSettings.asStateFlow()
+    val hasSeenFirstPhotoInstructions: StateFlow<Boolean> = _hasSeenFirstPhotoInstructions.asStateFlow()
 
     fun setOverlayEnabled(enabled: Boolean) {
         if (_isOverlayEnabled.value == enabled) return
@@ -56,10 +60,19 @@ class CameraOverlayPreferences(context: Context) {
         _guideSettings.value = normalizedSettings
     }
 
+    fun markFirstPhotoInstructionsSeen() {
+        if (_hasSeenFirstPhotoInstructions.value) return
+        preferences.edit()
+            .putBoolean(KEY_FIRST_PHOTO_INSTRUCTIONS_SEEN, true)
+            .apply()
+        _hasSeenFirstPhotoInstructions.value = true
+    }
+
     private companion object {
         private const val PREFERENCES_NAME = "camera_overlay_preferences"
         private const val KEY_OVERLAY_ENABLED = "overlay_enabled"
         private const val KEY_VERTICAL_GUIDE_PROGRESS = "vertical_guide_progress"
         private const val KEY_HORIZONTAL_GUIDE_PROGRESS = "horizontal_guide_progress"
+        private const val KEY_FIRST_PHOTO_INSTRUCTIONS_SEEN = "first_photo_instructions_seen"
     }
 }

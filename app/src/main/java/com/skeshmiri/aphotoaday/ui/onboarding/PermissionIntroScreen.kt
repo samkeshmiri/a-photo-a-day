@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.WifiOff
@@ -45,7 +46,7 @@ fun PermissionIntroScreen(
                 style = MaterialTheme.typography.headlineMedium,
             )
             Text(
-                text = "Android will ask for a couple of permissions next. Here is exactly what they are used for.",
+                text = "Android will ask for a few permissions next. Here is exactly what they are used for.",
                 modifier = Modifier.padding(top = 12.dp),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -72,6 +73,16 @@ fun PermissionIntroScreen(
                 },
                 title = "Notifications",
                 body = "Used only for the daily reminder to take today's photo.",
+            )
+            PermissionIntroItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Rounded.CameraAlt,
+                        contentDescription = null,
+                    )
+                },
+                title = "Camera access",
+                body = "Used only to take today's photo when you are ready.",
             )
             PermissionIntroItem(
                 icon = {

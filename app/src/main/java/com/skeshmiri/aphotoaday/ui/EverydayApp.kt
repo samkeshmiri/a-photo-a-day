@@ -36,6 +36,7 @@ fun EverydayApp(
     val context = LocalContext.current
     val isCameraOverlayEnabled by container.cameraOverlayPreferences.isOverlayEnabled.collectAsState()
     val cameraGuideSettings by container.cameraOverlayPreferences.guideSettings.collectAsState()
+    val hasSeenFirstPhotoInstructions by container.cameraOverlayPreferences.hasSeenFirstPhotoInstructions.collectAsState()
     val cameraFactory = remember(container) {
         SimpleViewModelFactory {
             CameraViewModel(
@@ -77,6 +78,8 @@ fun EverydayApp(
                 showFramingOverlay = isCameraOverlayEnabled,
                 guideSettings = cameraGuideSettings,
                 onToggleFramingOverlay = container.cameraOverlayPreferences::toggleOverlay,
+                hasSeenFirstPhotoInstructions = hasSeenFirstPhotoInstructions,
+                onFirstPhotoInstructionsCompleted = container.cameraOverlayPreferences::markFirstPhotoInstructionsSeen,
             )
         }
 

@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -30,7 +31,7 @@ class CameraScreenContentTest {
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun showsPermissionRequestWhenCameraPermissionIsMissing() {
+    fun showsCameraPermissionMessageWhenCameraPermissionIsMissing() {
         composeRule.setContent {
             EverydayTheme {
                 CameraScreenContent(
@@ -38,14 +39,15 @@ class CameraScreenContentTest {
                         hasCameraPermission = false,
                         isLoading = false,
                     ),
-                    onRequestPermission = {},
                     onCapture = {},
                     preview = { Box {} },
                 )
             }
         }
 
-        composeRule.onNodeWithText("Allow camera").assertIsDisplayed()
+        composeRule.onNodeWithText("Camera access is needed to take your daily photo.").assertIsDisplayed()
+        composeRule.onNodeWithText("Enable camera access in Android Settings, then return to the app.")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -66,7 +68,6 @@ class CameraScreenContentTest {
                             height = 1600,
                         ),
                     ),
-                    onRequestPermission = {},
                     onCapture = {},
                     preview = { Box {} },
                 )
@@ -87,7 +88,131 @@ class CameraScreenContentTest {
                         hasCameraPermission = true,
                         isLoading = false,
                     ),
-                    onRequestPermission = {},
+                    onCapture = {},
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFramingOverlayTag).assertIsDisplayed()
+    }
+
+    @Test
+    fun showsFirstPhotoInstructionStepWhenReadyForFirstCapture() {
+        composeRule.setContent {
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                        hasAnySavedPhotos = false,
+                    ),
+                    hasSeenFirstPhotoInstructions = false,
+                    onCapture = {},
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFirstPhotoInstructionsTag).assertIsDisplayed()
+        composeRule.onNodeWithText("Line your eyes up with the grid cross-sections.").assertIsDisplayed()
+    }
+
+    @Test
+    fun continuingFirstPhotoInstructionsAddsGridToggleInstruction() {
+        composeRule.setContent {
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                        hasAnySavedPhotos = false,
+                    ),
+                    hasSeenFirstPhotoInstructions = false,
+                    onCapture = {},
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFirstPhotoInstructionsContinueTag).performClick()
+
+        composeRule.onNodeWithText("Line your eyes up with the grid cross-sections.").assertIsDisplayed()
+        composeRule.onNodeWithText("Press and hold the camera button to turn the grid lines on or off.")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun completingFirstPhotoInstructionsCallsHandlerAndRemovesOverlay() {
+        var completionCount = 0
+
+        composeRule.setContent {
+            var hasSeenInstructions by remember { mutableStateOf(false) }
+
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                        hasAnySavedPhotos = false,
+                    ),
+                    hasSeenFirstPhotoInstructions = hasSeenInstructions,
+                    onCapture = {},
+                    onFirstPhotoInstructionsCompleted = {
+                        completionCount += 1
+                        hasSeenInstructions = true
+                    },
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFirstPhotoInstructionsContinueTag).performClick()
+        composeRule.onNodeWithTag(CameraFirstPhotoInstructionsContinueTag).performClick()
+
+        composeRule.onAllNodesWithTag(CameraFirstPhotoInstructionsTag).assertCountEquals(0)
+        composeRule.runOnIdle {
+            assertEquals(1, completionCount)
+        }
+    }
+
+    @Test
+    fun disablesCaptureWhileFirstPhotoInstructionsAreActive() {
+        var captureCount = 0
+
+        composeRule.setContent {
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                        hasAnySavedPhotos = false,
+                    ),
+                    hasSeenFirstPhotoInstructions = false,
+                    onCapture = { captureCount += 1 },
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraCaptureButtonTag).assertIsNotEnabled()
+        composeRule.runOnIdle {
+            assertEquals(0, captureCount)
+        }
+    }
+
+    @Test
+    fun firstPhotoInstructionsForceFramingOverlayVisibleWithoutSavedPreference() {
+        composeRule.setContent {
+            EverydayTheme {
+                CameraScreenContent(
+                    uiState = CameraUiState(
+                        hasCameraPermission = true,
+                        isLoading = false,
+                        hasAnySavedPhotos = false,
+                    ),
+                    showFramingOverlay = false,
+                    hasSeenFirstPhotoInstructions = false,
                     onCapture = {},
                     preview = { Box {} },
                 )
@@ -107,7 +232,6 @@ class CameraScreenContentTest {
                         isLoading = false,
                     ),
                     showFramingOverlay = false,
-                    onRequestPermission = {},
                     onCapture = {},
                     preview = { Box {} },
                 )
@@ -128,7 +252,6 @@ class CameraScreenContentTest {
                         hasCameraPermission = true,
                         isLoading = false,
                     ),
-                    onRequestPermission = {},
                     onCapture = { captureCount += 1 },
                     preview = { Box {} },
                 )
@@ -153,7 +276,6 @@ class CameraScreenContentTest {
                         isLoading = false,
                     ),
                     showFramingOverlay = showOverlay,
-                    onRequestPermission = {},
                     onCapture = {},
                     onToggleFramingOverlay = { showOverlay = !showOverlay },
                     preview = { Box {} },

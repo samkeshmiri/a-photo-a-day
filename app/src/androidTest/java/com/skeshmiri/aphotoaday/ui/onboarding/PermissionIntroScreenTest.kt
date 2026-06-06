@@ -25,6 +25,8 @@ class PermissionIntroScreenTest {
         composeRule.onNodeWithText("A Photo a Day stays private").assertIsDisplayed()
         composeRule.onNodeWithText("Gallery access").assertIsDisplayed()
         composeRule.onNodeWithText("Notifications").assertIsDisplayed()
+        composeRule.onNodeWithText("Camera access").assertIsDisplayed()
+        composeRule.onNodeWithText("Used only to take today's photo when you are ready.").assertIsDisplayed()
         composeRule.onNodeWithText("No internet access").assertIsDisplayed()
         composeRule.onNodeWithText("The app is shut off from the internet. Photos stay local on this device.")
             .assertIsDisplayed()

@@ -29,11 +29,26 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission(),
     ) {
         // Reminders keep scheduling even if the user denies the permission.
-        requestMediaReadPermissionIfNeeded()
+        if (!requestMediaReadPermissionIfNeeded()) {
+            if (!requestCameraPermissionIfNeeded()) {
+                finishStartupPermissionIntro()
+            }
+        }
     }
     private val mediaReadPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
-    ) { /* the gallery still shows app-owned photos if the user denies access */ }
+    ) {
+        // The gallery still shows app-owned photos if the user denies access.
+        if (!requestCameraPermissionIfNeeded()) {
+            finishStartupPermissionIntro()
+        }
+    }
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        // If denied, the camera screen explains that access must be enabled in Android Settings.
+        finishStartupPermissionIntro()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,13 +61,7 @@ class MainActivity : ComponentActivity() {
             EverydayTheme {
                 if (showPermissionIntro) {
                     PermissionIntroScreen(
-                        onContinue = {
-                            permissionIntroPreferences.edit()
-                                .putBoolean(PERMISSION_INTRO_SEEN_KEY, true)
-                                .apply()
-                            showPermissionIntro = false
-                            requestStartupPermissionsIfNeeded()
-                        },
+                        onContinue = ::requestStartupPermissionsFromIntro,
                     )
                 } else {
                     EverydayApp(
@@ -62,10 +71,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        if (!showPermissionIntro) {
-            requestStartupPermissionsIfNeeded()
-        }
     }
 
     override fun onDestroy() {
@@ -73,10 +78,20 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun requestStartupPermissionsIfNeeded() {
-        if (!requestNotificationPermissionIfNeeded()) {
-            requestMediaReadPermissionIfNeeded()
+    private fun requestStartupPermissionsFromIntro() {
+        if (!requestNotificationPermissionIfNeeded() &&
+            !requestMediaReadPermissionIfNeeded() &&
+            !requestCameraPermissionIfNeeded()
+        ) {
+            finishStartupPermissionIntro()
         }
+    }
+
+    private fun finishStartupPermissionIntro() {
+        permissionIntroPreferences.edit()
+            .putBoolean(PERMISSION_INTRO_SEEN_KEY, true)
+            .apply()
+        showPermissionIntro = false
     }
 
     private fun requestNotificationPermissionIfNeeded(): Boolean {
@@ -89,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
     private fun shouldShowStartupPermissionIntro(): Boolean =
         !permissionIntroPreferences.getBoolean(PERMISSION_INTRO_SEEN_KEY, false) &&
-            (needsNotificationPermission() || !hasMediaReadPermission())
+            (needsNotificationPermission() || !hasMediaReadPermission() || !hasCameraPermission())
 
     private fun needsNotificationPermission(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -105,6 +120,20 @@ class MainActivity : ComponentActivity() {
         }
         return false
     }
+
+    private fun requestCameraPermissionIfNeeded(): Boolean {
+        if (!hasCameraPermission()) {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            return true
+        }
+        return false
+    }
+
+    private fun hasCameraPermission(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.CAMERA,
+        ) == PackageManager.PERMISSION_GRANTED
 
     private fun hasMediaReadPermission(): Boolean {
         val permissions = mediaReadPermissions()

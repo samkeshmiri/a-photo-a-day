@@ -1,8 +1,5 @@
 package com.skeshmiri.aphotoaday.ui.camera
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -45,6 +42,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +52,8 @@ import com.skeshmiri.aphotoaday.ui.common.FourThreePortraitFrame
 import com.skeshmiri.aphotoaday.ui.common.OnResume
 
 const val CameraCaptureButtonTag = "camera_capture_button"
+const val CameraFirstPhotoInstructionsTag = "camera_first_photo_instructions"
+const val CameraFirstPhotoInstructionsContinueTag = "camera_first_photo_instructions_continue"
 
 @Composable
 fun CameraScreen(
@@ -64,16 +64,13 @@ fun CameraScreen(
     showFramingOverlay: Boolean,
     guideSettings: CameraGuideSettings,
     onToggleFramingOverlay: () -> Unit,
+    hasSeenFirstPhotoInstructions: Boolean,
+    onFirstPhotoInstructionsCompleted: () -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var previewView by remember { mutableStateOf<PreviewView?>(null) }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = viewModel::onPermissionResult,
-    )
 
     OnResume {
         viewModel.syncPermission(context)
@@ -105,15 +102,14 @@ fun CameraScreen(
         uiState = uiState,
         showFramingOverlay = showFramingOverlay,
         guideSettings = guideSettings,
-        onRequestPermission = {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        },
+        hasSeenFirstPhotoInstructions = hasSeenFirstPhotoInstructions,
         onCapture = {
             viewModel.capture(cameraController) { dateKey, tempFile ->
                 onOpenReview(dateKey, tempFile.absolutePath)
             }
         },
         onToggleFramingOverlay = onToggleFramingOverlay,
+        onFirstPhotoInstructionsCompleted = onFirstPhotoInstructionsCompleted,
         preview = {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
@@ -135,11 +131,22 @@ fun CameraScreenContent(
     uiState: CameraUiState,
     showFramingOverlay: Boolean = true,
     guideSettings: CameraGuideSettings = CameraGuideSettings(),
-    onRequestPermission: () -> Unit,
+    hasSeenFirstPhotoInstructions: Boolean = true,
     onCapture: () -> Unit,
     onToggleFramingOverlay: () -> Unit = {},
+    onFirstPhotoInstructionsCompleted: () -> Unit = {},
     preview: @Composable () -> Unit,
 ) {
+    val showFirstPhotoInstructions = !hasSeenFirstPhotoInstructions &&
+        uiState.hasCameraPermission &&
+        !uiState.isLoading &&
+        uiState.todayPhoto == null &&
+        !uiState.hasAnySavedPhotos &&
+        uiState.errorMessage == null
+    var firstPhotoInstructionStep by remember(showFirstPhotoInstructions) {
+        mutableStateOf(FirstPhotoInstructionStep.AlignEyes)
+    }
+
     Scaffold(modifier = Modifier.systemBarsPadding()) { innerPadding ->
         when {
             uiState.isLoading -> {
@@ -163,21 +170,15 @@ fun CameraScreenContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "The camera stays local to this app. Grant access to take your daily selfie.",
+                        text = "Camera access is needed to take your daily photo.",
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     Text(
-                        text = uiState.errorMessage ?: "No network, no account, just one photo a day.",
+                        text = uiState.errorMessage ?: "Enable camera access in Android Settings, then return to the app.",
                         modifier = Modifier.padding(top = 12.dp),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Button(
-                        onClick = onRequestPermission,
-                        modifier = Modifier.padding(top = 24.dp),
-                    ) {
-                        Text("Allow camera")
-                    }
                 }
             }
 
@@ -235,10 +236,23 @@ fun CameraScreenContent(
                                 modifier = Modifier.height(frameHeight),
                             ) {
                                 preview()
-                                if (showFramingOverlay) {
+                                if (showFramingOverlay || showFirstPhotoInstructions) {
                                     CameraFramingOverlay(
                                         modifier = Modifier.fillMaxSize(),
                                         guideSettings = guideSettings,
+                                    )
+                                }
+                                if (showFirstPhotoInstructions) {
+                                    FirstPhotoInstructionsOverlay(
+                                        step = firstPhotoInstructionStep,
+                                        onContinue = {
+                                            if (firstPhotoInstructionStep == FirstPhotoInstructionStep.AlignEyes) {
+                                                firstPhotoInstructionStep = FirstPhotoInstructionStep.ToggleGrid
+                                            } else {
+                                                onFirstPhotoInstructionsCompleted()
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxSize(),
                                     )
                                 }
                             }
@@ -270,7 +284,12 @@ fun CameraScreenContent(
                             contentAlignment = Alignment.TopCenter,
                         ) {
                             val captureButtonShape = RoundedCornerShape(24.dp)
-                            val captureButtonEnabled = !uiState.isCapturing
+                            val captureButtonEnabled = !uiState.isCapturing && !showFirstPhotoInstructions
+                            val captureButtonContentDescription = when {
+                                uiState.isCapturing -> "Taking photo"
+                                showFirstPhotoInstructions -> "Finish camera instructions"
+                                else -> "Take photo"
+                            }
                             val captureButtonContainerColor = if (captureButtonEnabled) {
                                 MaterialTheme.colorScheme.primary
                             } else {
@@ -293,6 +312,7 @@ fun CameraScreenContent(
                                         onCapture = onCapture,
                                         onToggleFramingOverlay = onToggleFramingOverlay,
                                         showFramingOverlay = showFramingOverlay,
+                                        captureContentDescription = captureButtonContentDescription,
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
@@ -318,14 +338,66 @@ fun CameraScreenContent(
     }
 }
 
+@Composable
+private fun FirstPhotoInstructionsOverlay(
+    step: FirstPhotoInstructionStep,
+    onContinue: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.testTag(CameraFirstPhotoInstructionsTag),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.68f))
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Text(
+                text = "Line your eyes up with the grid cross-sections.",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                textAlign = TextAlign.Start,
+            )
+            if (step == FirstPhotoInstructionStep.ToggleGrid) {
+                Text(
+                    text = "Press and hold the camera button to turn the grid lines on or off.",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    textAlign = TextAlign.Start,
+                )
+            }
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(CameraFirstPhotoInstructionsContinueTag),
+            ) {
+                Text("Continue")
+            }
+        }
+    }
+}
+
+private enum class FirstPhotoInstructionStep {
+    AlignEyes,
+    ToggleGrid,
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 private fun Modifier.captureButtonInteractions(
     enabled: Boolean,
     onCapture: () -> Unit,
     onToggleFramingOverlay: () -> Unit,
     showFramingOverlay: Boolean,
+    captureContentDescription: String,
 ): Modifier = semantics {
-    contentDescription = if (enabled) "Take photo" else "Taking photo"
+    contentDescription = captureContentDescription
 }
     .testTag(CameraCaptureButtonTag)
     .combinedClickable(

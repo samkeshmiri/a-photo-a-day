@@ -7,7 +7,7 @@ import java.time.ZoneId
 
 class MediaStorePhotoMapperTest {
     @Test
-    fun `maps display name prefix into the daily photo`() {
+    fun mapsDisplayNamePrefixIntoTheDailyPhoto() {
         val photo = MediaStorePhotoMapper.toDailyPhoto(
             row = MediaStorePhotoRow(
                 id = 7L,
@@ -26,7 +26,7 @@ class MediaStorePhotoMapperTest {
     }
 
     @Test
-    fun `falls back to the timestamp when the filename has no date key`() {
+    fun fallsBackToTheTimestampWhenTheFilenameHasNoDateKey() {
         val photo = MediaStorePhotoMapper.toDailyPhoto(
             row = MediaStorePhotoRow(
                 id = 11L,
@@ -43,4 +43,3 @@ class MediaStorePhotoMapperTest {
         assertEquals("2026-03-26", photo.dateKey)
     }
 }
-
