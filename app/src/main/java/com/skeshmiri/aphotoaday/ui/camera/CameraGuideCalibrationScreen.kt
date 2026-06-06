@@ -256,7 +256,7 @@ fun CameraGuideCalibrationScreenContent(
                                     contentDescription = null,
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .alpha(0.25f)
+                                        .alpha(0.30f)
                                         .testTag(CameraGuideLatestPhotoOverlayTag),
                                     contentScale = ContentScale.Crop,
                                 )
