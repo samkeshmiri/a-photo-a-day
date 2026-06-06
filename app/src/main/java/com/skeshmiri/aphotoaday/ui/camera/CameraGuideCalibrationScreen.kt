@@ -23,6 +23,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Grid3x3
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.Save
@@ -48,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -56,6 +58,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -74,6 +77,7 @@ const val CameraGuideHorizontalSliderTag = "camera_guide_horizontal_slider"
 const val CameraGuideSaveButtonTag = "camera_guide_save_button"
 const val CameraGuideResetButtonTag = "camera_guide_reset_button"
 const val CameraGuideLatestPhotoOverlayButtonTag = "camera_guide_latest_photo_overlay_button"
+const val CameraGuideLinesButtonTag = "camera_guide_lines_button"
 const val CameraGuideLatestPhotoOverlayTag = "camera_guide_latest_photo_overlay"
 private const val CameraGuideMiddleProgress = 0.5f
 private const val SliderDoubleTapTimeoutMillis = 300L
@@ -96,6 +100,7 @@ fun CameraGuideCalibrationScreen(
     }
     var latestPhoto by remember { mutableStateOf<DailyPhoto?>(null) }
     var showLatestPhotoOverlay by rememberSaveable { mutableStateOf(false) }
+    var showGuideLines by rememberSaveable { mutableStateOf(true) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -149,6 +154,8 @@ fun CameraGuideCalibrationScreen(
         latestPhoto = latestPhoto,
         showLatestPhotoOverlay = showLatestPhotoOverlay,
         onLatestPhotoOverlayCheckedChange = { checked -> showLatestPhotoOverlay = checked },
+        showGuideLines = showGuideLines,
+        onGuideLinesCheckedChange = { checked -> showGuideLines = checked },
         onClose = onClose,
         preview = {
             AndroidView(
@@ -180,6 +187,8 @@ fun CameraGuideCalibrationScreenContent(
     latestPhoto: DailyPhoto? = null,
     showLatestPhotoOverlay: Boolean = false,
     onLatestPhotoOverlayCheckedChange: (Boolean) -> Unit = {},
+    showGuideLines: Boolean = true,
+    onGuideLinesCheckedChange: (Boolean) -> Unit = {},
     preview: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -261,10 +270,12 @@ fun CameraGuideCalibrationScreenContent(
                                     contentScale = ContentScale.Crop,
                                 )
                             }
-                            CameraFramingOverlay(
-                                modifier = Modifier.fillMaxSize(),
-                                guideSettings = guideSettings,
-                            )
+                            if (showGuideLines) {
+                                CameraFramingOverlay(
+                                    modifier = Modifier.fillMaxSize(),
+                                    guideSettings = guideSettings,
+                                )
+                            }
                         }
 
                         IconButton(
@@ -312,6 +323,12 @@ fun CameraGuideCalibrationScreenContent(
                                 enabled = latestPhoto != null,
                                 onCheckedChange = onLatestPhotoOverlayCheckedChange,
                                 modifier = Modifier.testTag(CameraGuideLatestPhotoOverlayButtonTag),
+                            )
+
+                            GuideLinesToggleButton(
+                                checked = showGuideLines,
+                                onCheckedChange = onGuideLinesCheckedChange,
+                                modifier = Modifier.testTag(CameraGuideLinesButtonTag),
                             )
 
                             Button(
@@ -374,13 +391,66 @@ private fun LatestPhotoOverlayToggleButton(
         "Show latest photo overlay"
     }
 
+    GuideToggleButton(
+        checked = checked,
+        enabled = enabled,
+        onCheckedChange = onCheckedChange,
+        imageVector = Icons.Rounded.Person,
+        contentDescription = description,
+        width = 40.dp,
+        iconSize = 28.dp,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun GuideLinesToggleButton(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val description = if (checked) {
+        "Hide guide lines"
+    } else {
+        "Show guide lines"
+    }
+
+    GuideToggleButton(
+        checked = checked,
+        enabled = true,
+        onCheckedChange = onCheckedChange,
+        imageVector = Icons.Rounded.Grid3x3,
+        contentDescription = description,
+        width = 40.dp,
+        iconSize = 20.dp,
+        containerColor = if (checked) Snow else Snow.copy(alpha = 0.72f),
+        contentColor = JetBlack,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun GuideToggleButton(
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    imageVector: ImageVector,
+    contentDescription: String,
+    width: Dp,
+    iconSize: Dp,
+    containerColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
-            .size(width = 80.dp, height = 72.dp)
+            .size(width = width, height = 72.dp)
             .clip(RoundedCornerShape(24.dp))
             .background(containerColor)
             .semantics {
-                contentDescription = description
+                this.contentDescription = contentDescription
             }
             .toggleable(
                 value = checked,
@@ -391,10 +461,10 @@ private fun LatestPhotoOverlayToggleButton(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.Rounded.Person,
+            imageVector = imageVector,
             contentDescription = null,
             tint = contentColor,
-            modifier = Modifier.size(28.dp),
+            modifier = Modifier.size(iconSize),
         )
     }
 }

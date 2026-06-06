@@ -53,6 +53,7 @@ class CameraGuideCalibrationScreenContentTest {
         composeRule.onNodeWithTag(CameraGuideSaveButtonTag).assertIsDisplayed()
         composeRule.onNodeWithTag(CameraGuideResetButtonTag).assertIsDisplayed()
         composeRule.onNodeWithTag(CameraGuideLatestPhotoOverlayButtonTag).assertIsDisplayed()
+        composeRule.onNodeWithTag(CameraGuideLinesButtonTag).assertIsDisplayed()
         composeRule.onAllNodesWithTag(CameraCaptureButtonTag).assertCountEquals(0)
     }
 
@@ -109,6 +110,37 @@ class CameraGuideCalibrationScreenContentTest {
             assertEquals(true, showLatestPhotoOverlay)
         }
         composeRule.onNodeWithTag(CameraGuideLatestPhotoOverlayTag).assertIsDisplayed()
+    }
+
+    @Test
+    fun togglesGuideLines() {
+        var showGuideLines by mutableStateOf(true)
+        composeRule.setContent {
+            EverydayTheme {
+                CameraGuideCalibrationScreenContent(
+                    hasCameraPermission = true,
+                    guideSettings = CameraGuideSettings(),
+                    onRequestPermission = {},
+                    onVerticalGuideProgressChange = {},
+                    onHorizontalGuideProgressChange = {},
+                    hasUnsavedChanges = false,
+                    onSaveGuideSettings = {},
+                    onResetGuideSettings = {},
+                    onClose = {},
+                    showGuideLines = showGuideLines,
+                    onGuideLinesCheckedChange = { showGuideLines = it },
+                    preview = { Box {} },
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(CameraFramingOverlayTag).assertIsDisplayed()
+        composeRule.onNodeWithTag(CameraGuideLinesButtonTag).performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(false, showGuideLines)
+        }
+        composeRule.onAllNodesWithTag(CameraFramingOverlayTag).assertCountEquals(0)
     }
 
     @Test
