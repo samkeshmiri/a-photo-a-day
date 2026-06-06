@@ -1,0 +1,22 @@
+app/src/main/java/com/skeshmiri/aphotoaday/ui/camera/CameraGuideCalibrationScreen.kt
+  s_3b2e7d777bea4d::t_63a505a1465571 400
+  s_3b2e7d777bea4d::t_40051ba870be69 26,52,61,80,103,157-158,190-191,273-278,328-333,394-399,401-446,449,453,464,467
+app/src/androidTest/java/com/skeshmiri/aphotoaday/ui/camera/CameraGuideCalibrationScreenContentTest.kt
+  s_3b2e7d777bea4d::t_09e5611a7a2abf 56,115-143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "2ca60afe98ee287a15dec8f3313e36e5f2e119ae",
+  "prompts": {},
+  "sessions": {
+    "s_3b2e7d777bea4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e97d6-b318-7ce3-9313-ba0ac8f583d5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Sam Keshmiri <samkeshmiri94@gmail.com>"
+    }
+  }
+}
