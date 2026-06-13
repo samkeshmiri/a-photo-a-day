@@ -301,14 +301,24 @@ private fun GalleryGrid(
                     key = "month-${section.yearMonth}",
                     span = { GridItemSpan(maxLineSpan) },
                 ) {
-                    Text(
-                        text = section.title,
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp, bottom = 2.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = section.title,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = section.progress,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
 
                 items(section.photos, key = { it.id }) { photo ->
@@ -389,6 +399,7 @@ private fun GalleryScrollbar(
 private data class GalleryMonthSection(
     val yearMonth: YearMonth,
     val title: String,
+    val progress: String,
     val photos: List<DailyPhoto>,
 )
 
@@ -404,6 +415,7 @@ private fun List<DailyPhoto>.toMonthSections(): List<GalleryMonthSection> {
         GalleryMonthSection(
             yearMonth = yearMonth,
             title = monthFormatter.format(yearMonth.atDay(1)),
+            progress = "(${monthPhotos.size}/${yearMonth.lengthOfMonth()})",
             photos = monthPhotos,
         )
     }

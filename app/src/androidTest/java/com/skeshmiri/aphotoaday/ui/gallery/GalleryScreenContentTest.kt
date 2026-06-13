@@ -60,6 +60,29 @@ class GalleryScreenContentTest {
     }
 
     @Test
+    fun showsMonthAndPhotoProgressInGalleryHeader() {
+        composeRule.setContent {
+            EverydayTheme {
+                GalleryScreenContent(
+                    uiState = GalleryUiState(
+                        isLoading = false,
+                        photos = listOf(
+                            photo(id = 1L, capturedAt = "2026-03-01T08:45:00Z"),
+                            photo(id = 2L, capturedAt = "2026-03-02T08:45:00Z"),
+                        ),
+                    ),
+                    onOpenPhoto = {},
+                    onOpenExportDialog = {},
+                    onOpenGuideSettings = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("March 2026").assertIsDisplayed()
+        composeRule.onNodeWithText("(2/31)").assertIsDisplayed()
+    }
+
+    @Test
     fun exportDialogUpdatesEstimatedLengthWhenPresetChanges() {
         composeRule.setContent {
             var selectedFps by mutableStateOf(5)
@@ -89,12 +112,15 @@ class GalleryScreenContentTest {
         composeRule.onNodeWithText("Estimated length: 12.0 seconds").assertIsDisplayed()
     }
 
-    private fun photo(id: Long) = DailyPhoto(
+    private fun photo(
+        id: Long,
+        capturedAt: String = "2026-03-27T08:45:00Z",
+    ) = DailyPhoto(
         id = id,
         uri = Uri.parse("content://everyday/photo/$id"),
         displayName = "2026-03-27_084500.jpg",
-        dateKey = "2026-03-27",
-        capturedAt = Instant.parse("2026-03-27T08:45:00Z"),
+        dateKey = capturedAt.substringBefore('T'),
+        capturedAt = Instant.parse(capturedAt),
         width = 1200,
         height = 1600,
     )
