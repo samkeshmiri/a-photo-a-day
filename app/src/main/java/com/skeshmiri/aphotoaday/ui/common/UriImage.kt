@@ -36,11 +36,17 @@ fun UriImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
     thumbnailSize: Dp? = null,
+    maxBitmapDimensionPx: Int? = null,
 ) {
     val context = LocalContext.current
     val thumbnailSizePx = thumbnailSize?.value?.toInt()
-    val imageState by produceState<UriImageState>(initialValue = UriImageState.Loading, uri, thumbnailSizePx) {
-        value = loadBitmap(context, uri, thumbnailSizePx)
+    val imageState by produceState<UriImageState>(
+        initialValue = UriImageState.Loading,
+        uri,
+        thumbnailSizePx,
+        maxBitmapDimensionPx,
+    ) {
+        value = loadBitmap(context, uri, thumbnailSizePx, maxBitmapDimensionPx)
             ?.let(UriImageState::Loaded)
             ?: UriImageState.Error
     }
@@ -86,6 +92,7 @@ private suspend fun loadBitmap(
     context: Context,
     uri: Uri,
     thumbnailSizePx: Int?,
+    maxBitmapDimensionPx: Int?,
 ): ImageBitmap? = withContext(Dispatchers.IO) {
     runCatching {
         if (thumbnailSizePx != null && uri.scheme == ContentResolver.SCHEME_CONTENT) {
@@ -96,8 +103,22 @@ private suspend fun loadBitmap(
             ).asImageBitmap()
         } else {
             val source = ImageDecoder.createSource(context.contentResolver, uri)
-            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
                 decoder.isMutableRequired = false
+                maxBitmapDimensionPx
+                    ?.takeIf { it > 0 }
+                    ?.let { maxDimension ->
+                        val width = info.size.width
+                        val height = info.size.height
+                        val largestDimension = maxOf(width, height)
+                        if (largestDimension > maxDimension) {
+                            val scale = maxDimension.toFloat() / largestDimension.toFloat()
+                            decoder.setTargetSize(
+                                (width * scale).toInt().coerceAtLeast(1),
+                                (height * scale).toInt().coerceAtLeast(1),
+                            )
+                        }
+                    }
             }.asImageBitmap()
         }
     }.getOrNull()

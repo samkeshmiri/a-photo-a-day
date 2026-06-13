@@ -1,5 +1,6 @@
 package com.skeshmiri.aphotoaday.ui
 
+import android.content.Context
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
@@ -8,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,16 +18,19 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.skeshmiri.aphotoaday.camera.CameraController
 import com.skeshmiri.aphotoaday.di.AppContainer
+import com.skeshmiri.aphotoaday.model.DailyPhoto
 import com.skeshmiri.aphotoaday.ui.camera.CameraGuideCalibrationScreen
 import com.skeshmiri.aphotoaday.ui.camera.CameraScreen
 import com.skeshmiri.aphotoaday.ui.camera.CameraViewModel
+import com.skeshmiri.aphotoaday.ui.common.OnResume
 import com.skeshmiri.aphotoaday.ui.common.SimpleViewModelFactory
 import com.skeshmiri.aphotoaday.ui.gallery.GalleryScreen
 import com.skeshmiri.aphotoaday.ui.gallery.GalleryViewModel
 import com.skeshmiri.aphotoaday.ui.review.ReviewScreen
 import com.skeshmiri.aphotoaday.ui.review.ReviewViewModel
+import com.skeshmiri.aphotoaday.ui.viewer.PhotoViewerItem
 import com.skeshmiri.aphotoaday.ui.viewer.PhotoViewerScreen
-import java.time.Instant
+import com.skeshmiri.aphotoaday.ui.viewer.PhotoViewerViewModel
 
 @Composable
 fun EverydayApp(
@@ -51,6 +56,13 @@ fun EverydayApp(
             GalleryViewModel(
                 repository = container.dailyPhotoRepository,
                 videoExporter = container.galleryVideoExporter,
+            )
+        }
+    }
+    val viewerFactory = remember(container) {
+        SimpleViewModelFactory {
+            PhotoViewerViewModel(
+                repository = container.dailyPhotoRepository,
             )
         }
     }
@@ -88,14 +100,7 @@ fun EverydayApp(
             GalleryScreen(
                 viewModel = viewModel,
                 onOpenPhoto = { photo ->
-                    navController.navigate(
-                        Destinations.Viewer.route(
-                            uri = photo.uri.toString(),
-                            dateKey = photo.dateKey,
-                            displayName = photo.displayName,
-                            capturedAtEpochMillis = photo.capturedAt.toEpochMilli(),
-                        ),
-                    )
+                    navController.navigate(Destinations.Viewer.route(photo.id))
                 },
                 onOpenGuideSettings = {
                     navController.navigate(Destinations.GuideCalibration.route) {
@@ -154,47 +159,49 @@ fun EverydayApp(
         composable(
             route = Destinations.Viewer.pattern,
             arguments = listOf(
-                navArgument(Destinations.Viewer.uriArg) { type = NavType.StringType },
-                navArgument(Destinations.Viewer.dateKeyArg) { type = NavType.StringType },
-                navArgument(Destinations.Viewer.displayNameArg) { type = NavType.StringType },
-                navArgument(Destinations.Viewer.capturedAtArg) { type = NavType.LongType },
+                navArgument(Destinations.Viewer.idArg) { type = NavType.LongType },
             ),
         ) { backStackEntry ->
-            val uri = Uri.parse(
-                Uri.decode(backStackEntry.arguments?.getString(Destinations.Viewer.uriArg).orEmpty()),
-            )
-            val dateKey = Uri.decode(
-                backStackEntry.arguments?.getString(Destinations.Viewer.dateKeyArg).orEmpty(),
-            )
-            val displayName = Uri.decode(
-                backStackEntry.arguments?.getString(Destinations.Viewer.displayNameArg).orEmpty(),
-            )
-            val capturedAtEpochMillis = backStackEntry.arguments?.getLong(Destinations.Viewer.capturedAtArg)
-            val capturedAt = capturedAtEpochMillis
-                ?.takeIf { it > 0L }
-                ?.let(Instant::ofEpochMilli)
+            val photoId = backStackEntry.arguments?.getLong(Destinations.Viewer.idArg) ?: 0L
+            val viewModel: PhotoViewerViewModel = viewModel(factory = viewerFactory)
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val viewerPhotos = remember(uiState.photos, photoId) {
+                val loadedPhotos = uiState.photos.map { it.toPhotoViewerItem() }
+                loadedPhotos.takeIf { photos -> photos.any { it.id == photoId } }.orEmpty()
+            }
+
+            OnResume(viewModel::refresh)
             PhotoViewerScreen(
-                uri = uri,
-                title = dateKey,
-                contentDescription = displayName,
-                capturedAt = capturedAt,
+                photos = viewerPhotos,
+                initialPhotoId = photoId,
                 onClose = { navController.popBackStack() },
-                onShare = {
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = context.contentResolver.getType(uri) ?: "image/*"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        putExtra(Intent.EXTRA_TITLE, displayName)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        clipData = ClipData.newUri(context.contentResolver, displayName, uri)
-                    }
-                    val chooserIntent = Intent.createChooser(shareIntent, null).apply {
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    context.startActivity(chooserIntent)
-                },
+                onShare = { photo -> sharePhoto(context, photo) },
             )
         }
     }
+}
+
+private fun DailyPhoto.toPhotoViewerItem(): PhotoViewerItem =
+    PhotoViewerItem(
+        id = id,
+        uri = uri,
+        title = dateKey,
+        contentDescription = displayName,
+        capturedAt = capturedAt,
+    )
+
+private fun sharePhoto(context: Context, photo: PhotoViewerItem) {
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = context.contentResolver.getType(photo.uri) ?: "image/*"
+        putExtra(Intent.EXTRA_STREAM, photo.uri)
+        putExtra(Intent.EXTRA_TITLE, photo.contentDescription)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        clipData = ClipData.newUri(context.contentResolver, photo.contentDescription, photo.uri)
+    }
+    val chooserIntent = Intent.createChooser(shareIntent, null).apply {
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(chooserIntent)
 }
 
 private sealed class Destinations(val route: String) {
@@ -212,13 +219,9 @@ private sealed class Destinations(val route: String) {
     }
 
     data object Viewer : Destinations("viewer") {
-        const val uriArg = "uri"
-        const val dateKeyArg = "dateKey"
-        const val displayNameArg = "displayName"
-        const val capturedAtArg = "capturedAt"
-        const val pattern = "viewer/{$uriArg}/{$dateKeyArg}/{$displayNameArg}/{$capturedAtArg}"
+        const val idArg = "id"
+        const val pattern = "viewer/{$idArg}"
 
-        fun route(uri: String, dateKey: String, displayName: String, capturedAtEpochMillis: Long): String =
-            "viewer/${Uri.encode(uri)}/${Uri.encode(dateKey)}/${Uri.encode(displayName)}/$capturedAtEpochMillis"
+        fun route(id: Long): String = "viewer/$id"
     }
 }
