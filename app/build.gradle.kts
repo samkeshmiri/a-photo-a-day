@@ -14,6 +14,8 @@ val hasReleaseSigningConfig =
         releaseKeyAlias,
         releaseKeyPassword,
     ).all { !it.isNullOrBlank() }
+val releaseVersionCode = providers.gradleProperty("releaseVersionCode")
+val releaseVersionName = providers.gradleProperty("releaseVersionName")
 
 android {
     namespace = "com.skeshmiri.aphotoaday"
@@ -23,8 +25,8 @@ android {
         applicationId = "com.skeshmiri.aphotoaday"
         minSdk = 29
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = releaseVersionCode.orNull?.toInt() ?: 2
+        versionName = releaseVersionName.orNull ?: "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

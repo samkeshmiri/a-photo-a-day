@@ -1,9 +1,16 @@
 name: Android Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: Android versionName, for example 1.2.0
+        required: true
+        type: string
+      version_code:
+        description: Android versionCode, must be a positive integer and higher than the previous Play release
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -29,6 +36,19 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      - name: Validate release version inputs
+        shell: bash
+        run: |
+          if [[ ! "${{ inputs.version_code }}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "version_code must be a positive integer."
+            exit 1
+          fi
+
+          if [[ -z "${{ inputs.version_name }}" ]]; then
+            echo "version_name must not be empty."
+            exit 1
+          fi
+
       - name: Decode release keystore
         env:
           ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
@@ -41,7 +61,12 @@ jobs:
           ANDROID_SIGNING_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
-        run: ./gradlew :app:testDebugUnitTest :app:assembleRelease
+        run: >
+          ./gradlew
+          :app:testDebugUnitTest
+          :app:assembleRelease
+          -PreleaseVersionCode=${{ inputs.version_code }}
+          -PreleaseVersionName=${{ inputs.version_name }}
 
       - name: Verify release APK signature
         run: |
@@ -53,11 +78,11 @@ jobs:
         shell: bash
         run: |
           short_sha="${GITHUB_SHA::7}"
-          asset_name="a-photo-a-day-release-${short_sha}.apk"
+          asset_name="a-photo-a-day-${{ inputs.version_name }}-${{ inputs.version_code }}-${short_sha}.apk"
           cp app/build/outputs/apk/release/app-release.apk "${asset_name}"
           {
             echo "short_sha=${short_sha}"
-            echo "tag=release-${GITHUB_SHA}"
+            echo "tag=v${{ inputs.version_name }}-${{ inputs.version_code }}"
             echo "asset_name=${asset_name}"
           } >> "${GITHUB_OUTPUT}"
 
@@ -65,6 +90,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.tag }}
-          name: A Photo a Day ${{ steps.release_meta.outputs.short_sha }}
+          name: A Photo a Day ${{ inputs.version_name }} (${{ inputs.version_code }})
           files: ${{ steps.release_meta.outputs.asset_name }}
           generate_release_notes: true
