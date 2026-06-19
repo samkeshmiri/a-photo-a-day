@@ -1,5 +1,8 @@
 package com.skeshmiri.aphotoaday.ui.gallery
 
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,8 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skeshmiri.aphotoaday.export.ExportedGalleryVideo
 import com.skeshmiri.aphotoaday.model.DailyPhoto
 import com.skeshmiri.aphotoaday.ui.common.OnResume
 import com.skeshmiri.aphotoaday.ui.common.UriImage
@@ -64,6 +69,7 @@ fun GalleryScreen(
     onOpenPhoto: (DailyPhoto) -> Unit,
     onOpenGuideSettings: () -> Unit,
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExportDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -90,6 +96,9 @@ fun GalleryScreen(
             onDismiss = closeExportDialog,
             onSelectFps = viewModel::selectFps,
             onExport = viewModel::exportVideo,
+            onOpenExportedVideo = { exportedVideo ->
+                openExportedVideo(context, exportedVideo)
+            },
             onDone = closeExportDialog,
         )
     }
@@ -181,6 +190,7 @@ internal fun GalleryExportDialog(
     onDismiss: () -> Unit,
     onSelectFps: (Int) -> Unit,
     onExport: () -> Unit,
+    onOpenExportedVideo: (ExportedGalleryVideo) -> Unit,
     onDone: () -> Unit,
 ) {
     val exportedVideo = uiState.exportedVideo
@@ -227,7 +237,7 @@ internal fun GalleryExportDialog(
                         )
                     }
                 } else {
-                    Text("Saved ${exportedVideo.displayName} to ${exportedVideo.relativePath}")
+                    Text("Saved to ${exportedVideo.relativePath}")
                     Text("${exportedVideo.frameCount} photos at ${exportedVideo.fps} fps")
                     Text(
                         "Length: ${
@@ -267,9 +277,24 @@ internal fun GalleryExportDialog(
                 ) {
                     Text("Cancel")
                 }
+            } else {
+                TextButton(
+                    onClick = { onOpenExportedVideo(exportedVideo) },
+                ) {
+                    Text("Open")
+                }
             }
         },
     )
+}
+
+private fun openExportedVideo(context: Context, exportedVideo: ExportedGalleryVideo) {
+    val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(exportedVideo.uri, "video/mp4")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        clipData = ClipData.newUri(context.contentResolver, exportedVideo.displayName, exportedVideo.uri)
+    }
+    context.startActivity(viewIntent)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
