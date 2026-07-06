@@ -25,8 +25,8 @@ android {
         applicationId = "com.skeshmiri.aphotoaday"
         minSdk = 29
         targetSdk = 35
-        versionCode = releaseVersionCode.orNull?.toInt() ?: 2
-        versionName = releaseVersionName.orNull ?: "1.1.0"
+        versionCode = releaseVersionCode.orNull?.toInt() ?: 3
+        versionName = releaseVersionName.orNull ?: "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
